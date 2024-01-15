@@ -806,7 +806,7 @@ Throw[brep];
 ];
 
 
-Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->True,AdInfo->False};
+Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->True,SelectAllQ->False,AdInfo->False};
 PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tsingular={},cc,len},
 subset=Subsets[topsector]//ReverseSortBy[#,Length]&//DeleteCases[#,{}]&;
 zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];(*all zero sectors*)
@@ -840,7 +840,7 @@ Do[(*analyze sector by sector*)
 		brep=GetBaikovMatRep[result,subset[[i]],n];
 		cutr=Thread@Rule[Subscript[x,#]&/@subset[[i]],0];
 	];
-	If[OptionValue[SelectQ],len=Length[brep](*the number of minimal Baikov representations*),len=1];
+	If[OptionValue[SelectQ],If[OptionValue[SelectAllQ],len=2,len=Length[brep](*the number of minimal Baikov representations*)],len=1];
 	Do[(*iteration for different representations of one sector*)
 		intset={};
 		hintset={};
