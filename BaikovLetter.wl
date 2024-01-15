@@ -554,6 +554,7 @@ Do[
 			]
 			,
 			(*if there are square roots*)
+			If[Exponent[Times@@rhintset,z]>2,Continue[]];
 			tem=rhintset/.sol[[i,1]]//Factor//Numerator;
 			(*when the polynomials under square root vanish, then this is a branch cut, not a pole*)
 			If[!FreeQ[tem,0],Continue[]];
