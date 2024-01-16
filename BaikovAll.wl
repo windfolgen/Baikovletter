@@ -56,6 +56,8 @@ GramDet::usage="GramDet[{p1,p2,p3}] calculate the determination of matrix {{p1.p
 
 PD::usage="PD[loopm,extm,f] is used to represent a Feynman denominator. For example, PD[l1+l2,k1,-m2]=(l1+l2+k1)^2-m2";
 
+LPD::usage="LPD[loopm,extm,f] is used to represent a linear Feynman denominator. For example, PD[l1,k1,-m2]=l1.k1-m2";
+
 BaikovTrans::usage="BaikovTrans[dlist] gives the transformation between scalar product SProd[] and Baikov variables xi.";
 BaikovTrans::marg="The freedom of denominator list `1` doesn't equal to `2`: the freedom of the integral measure.";
 
@@ -578,6 +580,17 @@ PD[loopm_, extm_, f_, OptionsPattern[]] :=
         l = SProd[extm, extm] /. OptionValue[RepList];
         {s, l + f}
     ]; 
+
+SyntaxInformation[LPD] = {"ArgumentsPattern" -> {_, _, _}}; 
+
+Options[LPD] = {RepList -> {}}; 
+
+LPD[loopm_, extm_, f_, OptionsPattern[]] :=
+    Module[{s, l},
+        s = SProd[loopm, extm];
+        l = f /. OptionValue[RepList];
+        {s, l}
+    ];
 
 BaikovTrans[list_] :=
     Module[{l, v, m, xl, rep},
