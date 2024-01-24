@@ -1,0 +1,10 @@
+Here we provide the master integrals, UT basis, letters and CDE matrix in the canonical form for pentabox and triplebox integral families.
+
+With "xx" replaced by the name of the integral family "pentabox2m" or "triplebox", 
+xx_MIs, xx_UTbasis, xx_Letters and xx_CMatrices are respectively the master integrals, UT basis, letters and coefficient matrices corresponding to each letter.
+
+The complete CDE matrix is obtained by:
+
+CMatrices = Get["xx_CMatrices"];
+Letters = Get["xx_Letters"];
+CDEmatrix = eps Sum[CMatrices[[ii]] Log[Letters[[ii]]], {ii, Length[Letters]}];
