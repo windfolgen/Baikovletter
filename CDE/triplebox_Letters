@@ -1,0 +1,5 @@
+{mm, s, t, mm - t, 4*mm - s, mm - s - t, 2*mm - s - t, 
+ mm^2 - 2*mm*t + s*t + t^2, (s + Sqrt[s*(-4*mm + s)])/
+  (s - Sqrt[s*(-4*mm + s)]), (mm*(s - Sqrt[s*(-4*mm + s)]) + 
+   (s + Sqrt[s*(-4*mm + s)])*t)/(mm*(s + Sqrt[s*(-4*mm + s)]) + 
+   (s - Sqrt[s*(-4*mm + s)])*t)}
