@@ -69,7 +69,16 @@ AllRuleQ::usage="AllRuleQ[list] returns True if all elements in the list are rul
 
 ExtractPoleInfo::usage="ExtractPoleInfo[exp,n] extracts the information of pole from the output of PolesAnalyze[] function. n is the total number of Baikov variables in an integral family. There is an option OutputLevel, it is set to 1 by default. When it is 2, the output will include some second type of poles.";
 
+CompatiblePoleQ::usage="CompatiblePoleQ[p1,p2] checks whether two poles p1 and p2 are compatible.";
+MaxPole::usage="MaxPole[p1,p2] compares two poles. If they don't belong to each other then it will return 0. If p1 contains p2, it will return 1 and otherwise it will return 2.";
+RemoveSPole::usage="RemoveSPole[poles] removes those poles that is already contained in other poles.";
+CompatiblePoleGraph::usage="CompatiblePoleGraph[poles] constructs a graph for compatible poles and find all cliques in this graph. It will return {graph,cliques}";
+MergePoles::usage="MergePoles[poleslist] merges a list of compatible poles, poleslist.";
+
 ExtractSquareRoots::usage="ExtractSquareRoots[exp] extracts the leading singularities which are square roots. These are the possible square roots appearing in UT basis. exp is the output of PolesAnalyze[]";
+
+
+FindPoleMaps::uage="FindPoleMaps[poles,var,sector] finds all possible pole maps that can map var to kinematic variables in a given sector. poles is the output of ExtractPoleInfo[]. var is a list of Baikov variables involved in a construction of algebraic letter. The sector information is used to set the constraints that all propagators in this sector should be cut.";
 
 
 ConstructLetter::usage="ConstructLetter[G1,G2,type] gives the form of letter of two compatible Gram. When type=1, it is 1/Sqrt[G1G2], when type=2, it is 1/(G1G2).";
@@ -105,7 +114,7 @@ GramPCQ::err="There must be two grams in the arguments";
 GramPCQ::usage="GramPCQ[glist] finds whether two grams in glist are parent Gram and child Gram. For example, GramPCQ[{G[{1,3,4}],G[{3,4}]}] will be True";
 
 
-ApplyPolesToAlgLetter1::usage="ApplyPolesToAlgLetter1[poles,letters,reform,krep] apply all possible poles to the letters constructed. reform is the output of ReformRep[result]. This will give all first type letters. The output consists of three part: nletters (which is the normal letter), kletters (which consists of only pure kinematics grams) and sletters (which are not permissible because the distance between its grams is greater than 1)";
+ApplyPolesToAlgLetter1::usage="ApplyPolesToAlgLetter1[poles,letters,reform,krep] apply all possible poles to the letters constructed. reform is the output of ReformRep[result]. This will give all first type letters. The output consists of three part: nletters (which is the normal letter), kletters (which consists of only pure kinematics grams) and sletters (which are not permissible because the distance between the selection rule we put on)";
 
 
 GetQuadMatrix::usage="GetQuadMatrix[exp] get the quadratic matrix from a one-loop baikov polynomial.";
@@ -438,7 +447,7 @@ If[Head[exp]===Times,list=List@@exp,Return[{{},{exp}}]];
 Do[
 	If[MatchQ[list[[i]],Power[_,_?EvenQ]],AppendTo[sl,list[[i]]/.{Power[z_,n_]:>z}],AppendTo[nsl,list[[i]]]]
 ,{i,1,Length[list]}];
-Return[{sl,nsl}];
+Return[{sl,nsl}];(*sl is the perfect square after removing power, nsl is non-perfect square and it will remains in the square root*)
 ];
 
 
@@ -945,7 +954,7 @@ Return[{int1,int2}];
 ];
 
 
-Options[ExtractPoleInfo]={deBug->False,OutputLevel->1};
+(*Options[ExtractPoleInfo]={deBug->False,OutputLevel->1};
 ExtractPoleInfo[exp_,n_,OptionsPattern[]]:=Module[{tem,xl,isp={},result={},rep,spresult={}},
 xl=Subscript[x,#]&/@Range[n];
 tem=(exp[[All,1]]//Flatten[#,1]&)[[All,{1,4}]];
@@ -968,6 +977,116 @@ tem=spresult//GatherBy[#,First]&;
 spresult=Table[{tem[[i,1,1]],tem[[i,All,2]]},{i,1,Length[tem]}];
 If[OptionValue[OutputLevel]==1,Return[result]];
 If[OptionValue[OutputLevel]==2,Return[{result,spresult}]];
+];*)
+
+
+Options[CompatiblePoleQ]={deBug->False,CutConstraint->False};
+CompatiblePoleQ[p1_,p2_,OptionsPattern[]]:=Module[{pt1,pt2,tem,xint},
+	If[p1==={}||p2==={},Return[True]];
+	If[OptionValue[CutConstraint],(*if we set constraint on the propagators that are cut*)
+		xint={Cases[p1[[1]],Subscript[x,_],Infinity]//DeleteDuplicates,Cases[p2[[1]],Subscript[x,_],Infinity]//DeleteDuplicates}//SortBy[#,Length]&;
+		(* x variables which are cut variables*)
+		If[!ContainsAll[xint[[2]],xint[[1]]],Return[False]];
+	];
+	xint=Intersection[Cases[p1,Subscript[x,_],Infinity]//DeleteDuplicates,Cases[p2,Subscript[x,_],Infinity]//DeleteDuplicates];
+	If[FreeQ[p1,Rule[_,Infinity]],
+		pt1=p1//Flatten,
+		tem=p1[[2]]//DeleteCases[#,Rule[_,Infinity]]&;
+		If[tem=!={},
+			pt1=Join[p1[[1]],Thread@Rule[Keys[tem],g/@Values[tem]]],
+			pt1=p1//Flatten
+		]
+	];(*distinguish replacement containing infinity*)
+	If[FreeQ[p2,Rule[_,Infinity]],
+		pt2=p2//Flatten,
+		tem=p2[[2]]//DeleteCases[#,Rule[_,Infinity]]&;
+		If[tem=!={},
+			pt2=Join[p2[[1]],Thread@Rule[Keys[tem],g/@Values[tem]]],
+			pt2=p2//Flatten
+		]
+	];(*distinguish replacement containing infinity*)
+	If[SameQ[xint/.pt1,xint/.pt2],Return[True],Return[False]];
+];
+
+
+Options[MaxPole]={deBug->False};
+MaxPole[p1_,p2_]:=Module[{a,b},
+	If[!CompatiblePoleQ[p1,p2],Return[0]];
+	a=Cases[p1,Subscript[x,_],Infinity];
+	b=Cases[p2,Subscript[x,_],Infinity];
+	If[ContainsAll[a,b],Return[1]];
+	If[ContainsAll[b,a],Return[2]];
+	Return[0];
+];
+
+
+Options[RemoveSPole]={deBug->False};
+RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,l1=1,l2=2},
+	tem=poles;
+	While[l1<l2,
+		tem1={};
+		Do[
+			If[MaxPole[tem[[l1]],tem[[i]]]==0,Continue[],
+				If[MaxPole[tem[[l1]],tem[[i]]]==1,AppendTo[tem1,i](*keep track of those poles that are contained in this pole*),
+					tem1={1};
+					If[OptionValue[deBug],Print[tem[[l1]]]];
+					Break[](*this pole is contained in another pole*)
+				]
+			]
+		,{i,l1+1,Length[tem]}];
+		If[tem1==={},l1=l1+1;l2=Length[tem],(*if there are no poles contain or be contained w.r.t this pole*)
+			If[tem1==={1},tem=Delete[tem,l1];l2=Length[tem],(*if this pole is contained in another pole*)
+				l1=l1+1;tem=Delete[tem,List/@tem1];l2=Length[tem](*if this pole contains other poles, remove them*)
+			]
+		];
+		If[OptionValue[deBug],Print[tem1];Print[tem[[l1-1]]]];
+	];
+	Return[tem];
+];
+
+
+Options[CompatiblePoleGraph]={deBug->False,OutputLevel->2};
+CompatiblePoleGraph[poles_,OptionsPattern[]]:=Module[{remain,graph,tem},
+	remain=poles;
+	(*Print["original total ",Length[remain]," poles"];*)
+	graph=Reap[
+			Do[
+				Do[
+					If[CompatiblePoleQ[remain[[i]],remain[[j]]],(*if this two poles are compatible*)
+						Sow[UndirectedEdge[i,j]](*then we add an undirected edge to this graph*)
+					]
+				,{j,i+1,Length[remain]}]
+			,{i,1,Length[remain]}];
+	][[2,1]];
+	If[OptionValue[OutputLevel]==1,Return[{graph}]];
+	(*edge=EdgeList[graph]/.{UndirectedEdge->List};*)
+	(*If[OptionValue[deBug],Print[FindClique[graph,{3},All]]];*)
+	tem=FindClique[graph,Infinity,All]//Reverse;(*we find complete subgraphs formed by compatible poles*)
+	If[tem=!={},Print["maximal clique: ",Length[tem[[-1]]],"; # of cliques: ",Length[tem]]];
+	If[OptionValue[OutputLevel]==2,Return[{graph,tem}]];
+];
+
+
+Options[ExtractPoleInfo]={deBug->False,OutputLevel->1,Simp->True};
+ExtractPoleInfo[exp_,n_,OptionsPattern[]]:=Module[{tem,tem1,xl,isp={},result={},poles},
+result=Reap[Do[
+	tem=exp[[i]];(*for every sector*)
+	Sow[{Thread@Rule[Subscript[x,#]&/@tem[[-1]],0],#}&/@(tem[[1]][[All,1]]//Flatten[#,1]&//Cases[#,_?(AllRuleQ)]&),a];
+	Sow[{Thread@Rule[Subscript[x,#]&/@tem[[-1]],0],#}&/@(tem[[1]][[All,1]]//Flatten[#,1]&//DeleteCases[#,_?(AllRuleQ)]&),b];
+,{i,1,Length[exp]}];
+];(*All poles appearing in the Baikov representations. For every pole, there may be some x variable missing (integrated out)*)
+xl=Subscript[x,#]&/@Range[n];
+If[OptionValue[OutputLevel]==1,
+	tem1=result[[2,1]]//Flatten[#,1]&,(*poles only involve simple pole*)
+	If[OptionValue[OutputLevel]==2,Return[result[[2,2]]//Flatten[#,1]&]];(*poles that involve quadratic polynomial*)
+];
+Print["original total ",Length[tem1]," poles"];
+If[!OptionValue[Simp],Return[tem1]];
+poles=RemoveSPole[tem1];(*remove poles that are already contained in other poles*)
+(*tem=CompatiblePoleMerge[poles];(*merge compatible poles*)
+poles=RemoveSPole[tem];*)
+Print["final total ",Length[poles]," poles"];
+Return[{poles,Sequence@@CompatiblePoleGraph[poles]}];
 ];
 
 
@@ -1122,72 +1241,74 @@ Return[(FactorList[#][[All,1]]&/@(polestructure[[All,3]]//Flatten//DeleteDuplica
 Options[SpecialSimplify]={AdRep->{},deBug->False};
 SpecialSimplify[{gr_,ga_},OptionsPattern[]]:=Catch@Module[{rep,rp,tem,sq,numsq,densq},
 sq=ga//Factor;
+If[sq===0,Throw[{0,0}]];
 rp=gr//Factor;
-If[sq===0||rp===0,Throw[{0,0}]];(*If there is one zero, then this letter will be degenerate*)
+If[rp===0,Throw[{0,0}]];(*If there is one zero, then this letter will be degenerate*)
 rep=OptionValue[AdRep];
 (*we apply the replacement to the expression one-by-one*)
 If[rep==={},
-If[Head[sq]===Times,sq=List@@sq,sq={sq}];
-tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[sq[[i]],1/2]]],{i,1,Length[sq]}];
-tem=((Times@@tem)/(rp))//Factor;
-If[tem===0,Throw[{0,0}]];
-numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
-densq=Cases[{Denominator[tem]},Power[z_,1/2]->z,Infinity];
-sq=Join[numsq,densq];
-densq=Times@@densq;
-If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
-tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;
-Throw[{densq/(tem)/.{R->1}//Factor,(Times@@(sq(*/.{Power[z_,1/2]:>z}*)/.{R->1}))//Factor}],
+	If[Head[sq]===Times,sq=List@@sq,sq={sq}];
+	tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[sq[[i]],1/2]]],{i,1,Length[sq]}];(*take the square root, R is introduced to avoid things like Power[a,3/2]*)
+	tem=((Times@@tem)/(rp))//Factor;(*cancel common parts between gr and Sqrt[ga]*)
+	If[tem===0,Throw[{0,0}]];
+	numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
+	densq=Cases[{Denominator[tem]},Power[z_,1/2]->z,Infinity];
+	sq=Join[numsq,densq];
+	densq=Times@@densq;
+	If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
+	tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;(*remove square root part*)
+	Throw[{densq/(tem)/.{R->1}//Factor,(Times@@(sq(*/.{Power[z_,1/2]:>z}*)/.{R->1}))//Factor}],
 
-Do[
-sq=sq/.rep[[i]]//Factor;
-If[(Denominator[rp]/.rep[[i]]//Factor)===0,rp=0;sq=0;Break[]];
-rp=rp/.rep[[i]]//Factor;
-If[sq===0||rp===0,Throw[{0,0}]];
-If[OptionValue[deBug],Print["sq: ",sq];Print["rp: ",rp]];
-If[Head[sq]===Times,sq=List@@sq,sq={sq}];
-tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[R*sq[[i]],1/2]]],{i,1,Length[sq]}];
-If[OptionValue[deBug],Print["tem: ",tem]];
-tem=((Times@@tem)/(rp))//Factor;
-If[tem===0,rp=0;sq=0;Break[]];
-numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
-densq=Cases[{Denominator[tem]},Power[z_,1/2]->z,Infinity];
-sq=Join[numsq,densq];
-densq=Times@@densq;
-If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
-tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;
-rp=densq/(tem)//Factor;
-sq=(Times@@(sq(*/.{Power[z_,1/2]:>z}*)))//Factor;
-If[Denominator[sq]=!=1,rp=rp*Denominator[sq];sq=Numerator[sq]*Denominator[sq]];
-rp=rp/.{R->1};sq=sq/.{R->1};
-If[OptionValue[deBug],Print["{rp,sq}: ",{rp,sq}]]
-,{i,1,Length[rep]}];
-Throw[{rp,sq}]
+	Do[
+		sq=sq/.rep[[i]]//Factor;
+		If[sq===0,Throw[{0,0}]];
+		If[(Denominator[rp]/.rep[[i]]//Factor)===0,rp=0;sq=0;Break[]];(*when the rational part becomes infinity after replacement*)
+		rp=rp/.rep[[i]]//Factor;
+		If[rp===0,Throw[{0,0}]];(*when the rational part or square root part become 0 after replacement*)
+		If[Head[sq]===Times,sq=List@@sq,sq={sq}];
+		tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[R*sq[[i]],1/2]]],{i,1,Length[sq]}];
+		If[OptionValue[deBug],Print["sq: ",sq];Print["rp: ",rp];Print["tem: ",tem]];
+		tem=((Times@@tem)/(rp))//Factor;
+		If[tem===0,rp=0;sq=0;Break[]];
+		numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
+		densq=Cases[{Denominator[tem]},Power[z_,1/2]->z,Infinity];
+		sq=Join[numsq,densq];
+		densq=Times@@densq;
+		If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
+		tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;
+		rp=densq/(tem)//Factor;
+		sq=(Times@@(sq(*/.{Power[z_,1/2]:>z}*)))//Factor;
+		If[Denominator[sq]=!=1,rp=rp*Denominator[sq];sq=Numerator[sq]*Denominator[sq]];(*when expression under square root has denominator, then multiply a common factor to remove it*)
+		rp=rp/.{R->1};sq=sq/.{R->1};
+		If[OptionValue[deBug],Print["{rp,sq}: ",{rp,sq}]]
+	,{i,1,Length[rep]}];
+	Throw[{rp//Factor,sq//Factor}]
 ];
 ];
 
 
 Options[ApplyPoleToLetter]={deBug->False,AdRep->{}};
 ApplyPoleToLetter[pole_,letter_,krep_,OptionsPattern[]]:=Module[{tem,ntem,rep,rep1,gr,ga,isp,pos},
+(*the input of pole should be in the form like {{Subscript[x, 1]->0,Subscript[x, 2]->0,...},{Subscript[x, 5]->a,Subscript[x, 6]->b,Subscript[x, 7]->Infinity,...,Subscript[x, 8]->Infinity,Subscript[x, 7]->Subscript[x, 8],Subscript[x, 8]->0}}. After the replacement of Infinity, the curve should be projective.*)
 ga=((Cases[letter,Power[z_,1/2]->z,Infinity]//DeleteDuplicates)[[1]])/.{G[{},{}]->1};(*algebraic part of letter*)
 gr=(letter[[1]]//Numerator)/.{Power[_,1/2]->0};(*rational part of letter*)
 If[pole=!={},
-	tem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)/.pole[[1]]//Factor];
+	tem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)/.pole[[1]]];
 	If[OptionValue[deBug],Print["gr: ",gr];Print["ga: ",ga];Print["tem: ",tem]];
-	Do[
+	Do[(*transform the poles of infinity to the procedure of taking x0 to 0*)
 		If[!FreeQ[pole[[k]],Infinity],
 			rep=Split[pole[[k]],(Last[#1]===Last[#2])&];
-			ntem=Table[If[FreeQ[rep[[i]],Infinity],rep[[i]],Append[rep[[i]],Subscript[x, 0]->0]],{i,1,Length[rep]}]/.{Rule[Subscript[x,a_],Infinity]:>Rule[Subscript[x,a],Subscript[x,a]/Subscript[x,0]]}//Flatten;
-			isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
-			Do[
+			ntem=Table[If[FreeQ[rep[[i]],Infinity],rep[[i]],{rep[[i]],Subscript[x, 0]->0}/.{Rule[Subscript[x,a_],Infinity]:>Rule[Subscript[x,a],Subscript[x,a]/Subscript[x,0]]}],{i,1,Length[rep]}]//Flatten[#,1]&;
+			isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;(*keep track of variables taken to infinity*)
+			(*Do[
 				pos=Position[Keys[ntem],isp[[i]]];
 				If[Length[pos]>1,Continue[],If[ntem[[pos[[1,1]]+1,1]]=!=Subscript[x, 0],ntem=Insert[ntem,Subscript[x, 0]->0,pos[[1,1]]+1]]];
-			,{i,1,Length[isp]}];
+			,{i,1,Length[isp]}];(*it is different whether taking variables to infinity one by one or taking them to infinity at one time. *)*)
 			If[OptionValue[deBug],Print["ntem: ",ntem];Print["poles: ",pole[[k]]];Print["isp: ",isp]];
 			(*rep=Thread@Rule[isp,isp/Subscript[x, 0]];
 			ntem=DeleteCases[pole[[k]],Rule[_,Infinity]];*)
 			rep={};
-			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],ntem],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
+			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],Print["not projective curve!: ",ntem];ntem],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
 			,
 			rep=pole[[k]];rep1={}
 		];
@@ -1195,14 +1316,14 @@ If[pole=!={},
 		tem=SpecialSimplify[tem,AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];
 	,{k,2,Length[pole]}],
 	(*if pole==={}, then this only involves pure kinematics grams*)
-	tem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)//Factor]
+	tem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)]
 ];
 If[((tem[[1]]^2-tem[[2]]//Factor)===0),Return[0]];
 Return[Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&]]
 ];
 
 Options[ApplyPoleToGram]={deBug->False,AdRep->{}};
-ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,fac,rep,rep1,isp,den,pos},
+ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,fac,rep,rep1,isp,pos},
 	tem=Times@@(Det/@((gram/.{G[a_,b_]:>GramMat[a,b,krep]})/.pole[[1]]))/.OptionValue[AdRep]//Factor;
 	If[Length[pole]==1,tem=Times@@(PerfectSquareSplit[tem][[2]])];
 	Do[
@@ -1214,21 +1335,22 @@ ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,fac,rep,re
 			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],ntem],{}]
 			(*when projecting to infinity plane, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
 			,
-			rep=pole[[k]];rep1={}
+			pos=Position[pole[[k]],{__},1];
+			If[pos==={},rep=pole[[k]];rep1={},rep=pole[[k]][[pos[[1,1]]]];rep1=Delete[pole[[k]],pos[[1,1]]]];
 		];
 		(*tem=SpecialSimplify[{1,Times@@tem},AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];*)
 		ntem=tem;
 		If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
 		If[OptionValue[deBug],Print["tem: ",tem]];
 		If[!FreeQ[rep,Subscript[x, 0]],
-			ntem=Numerator[ntem/.rep//Factor]/.{Subscript[x, 0]->0};
+			ntem=Numerator[ntem/.rep//Factor]/.{Subscript[x, 0]->0};(*here we take the variables to infinity first*)
 			Do[
 				ntem=Times@@NumeratorDenominator[ntem/.rep1[[i]]//Factor];
-				ntem=Times@@(PerfectSquareSplit[ntem][[2]])
+				ntem=Times@@(PerfectSquareSplit[ntem][[2]])(*remove perfect square*)
 			,{i,1,Length[rep1]}],
 			Do[
 				ntem=Times@@NumeratorDenominator[ntem/.rep[[i]]//Factor];
-				ntem=Times@@(PerfectSquareSplit[ntem][[2]])
+				ntem=Times@@(PerfectSquareSplit[ntem][[2]])(*remove perfect square*)
 			,{i,1,Length[rep]}];
 		];
 		(*If[rep1=!={},rep1=Thread@Rule[Keys[rep1],Values[rep1]//.Drop[rep1,-1]]//Factor];
@@ -1304,7 +1426,7 @@ If[And@@Table[AnyTrue[permsq,NumericQ[ntem[[i]]/#//Cancel]&],{i,1,Length[ntem]}]
 ];*)
 
 
-Options[ApplyPolesToAlgLetter]={Sector->{},AdRep->{},deBug->False,PermSq->{},PathDis->True};
+(*Options[ApplyPolesToAlgLetter]={Sector->{},AdRep->{},deBug->False,PermSq->{},PathDis->True};
 ApplyPolesToAlgLetter[poles_,letters_,reform_,krep_,OptionsPattern[]]:=Module[{start,polepath,letterpath,kletters={},tem,ntem,glist,Glist,ll,nletters={},sletters={},var,rep,rep1,gr,ga,isp,pos,path},
 start=SessionTime[];
 Monitor[
@@ -1398,10 +1520,10 @@ AppendTo[nletters,{Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Fact
 ,{j,1,Length[poles]}]]
 ,{i,1,Length[letters]}],i];
 Return[{nletters//DeleteDuplicatesBy[#,First]&,kletters//DeleteDuplicatesBy[#,First]&,sletters}];
-];
+];*)
 
 
-Options[AllSectorAlgLetter]={deBug->False,PermSq->{},PathDis->True};
+(*Options[AllSectorAlgLetter]={deBug->False,PermSq->{},PathDis->True};
 AllSectorAlgLetter[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{l,tem,ntem,result={},spresult={}},
 l=Length[algletter];
 Print["totally ",l," sectors need to be analyzed"];
@@ -1414,7 +1536,7 @@ AppendTo[spresult,{tem[[3]],algletter[[i,2]]}]
 ,{i,1,Length[algletter]}];
 If[OptionValue[deBug],Return[{result,spresult}]];
 Return[result];
-];
+];*)
 
 
 RefinedPolePath[gram_,pole_,poles_,krep_]:=Module[{start,tem,ntem,int,path={}},
@@ -1463,19 +1585,156 @@ Return[False];
 ];
 
 
+MyContainsAny[a_,list_]:=If[AnyTrue[list,ContainsAll[a,#]&],True,False];
+
+
+Options[MergePoles]={deBug->False};
+MergePoles[poleslist_,OptionsPattern[]]:=Module[{rep1,rep2,tem1,tem2,isp,int,intv},
+	(*poleslist should be in the form {{{Subscript[x, 1]->0,Subscript[x, 2]->0,...},{Subscript[x, 6]->Infinity,...}},{...}}*)
+	rep1=poleslist[[All,1]]//Flatten//DeleteDuplicates//Sort;
+	tem1=Cases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//Flatten//DeleteDuplicates;(*Note that the second part has order so we can't sort them*)
+	tem2=DeleteCases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//DeleteDuplicates;
+	If[Length[tem2]==0,(*if there are no infinity poles*)
+		rep2=tem1,
+		(*if there are infinity poles*)
+		tem2=Table[If[Length[tem2[[i]]]==1,Append[tem2[[i]],Rule[tem2[[i,1,1]],0]],tem2[[i]]],{i,1,Length[tem2]}];(*complete some single poles like {x->Infinity} to {x->Infinity,x->0}*)
+		If[Length[tem2]==1,(*if there is only one infinity pole map*)
+			isp=Cases[tem2,Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
+			rep2=Join[tem1,{Thread@Rule[isp,isp/Subscript[x, 0]],Subscript[x, 0]->0},DeleteCases[tem2[[1]],Rule[_,Infinity]]//Delete[#,-1]&],
+			(*if there are more than one infinity pole map*)
+			isp=(Cases[#,Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates)&/@tem2;
+			tem2=(DeleteCases[#,Rule[_,Infinity]]&)/@tem2//Flatten;(*the replacement rule after taking x0 to 0*)
+			int=Reap[
+					Do[
+						Do[
+							intv=Intersection[isp[[i]],isp[[j]]];
+							If[intv=!={},Sow[intv]]
+						,{j,i+1,Length[isp]}]
+					,{i,1,Length[isp]}]
+			][[2]];
+			If[int=!={},int=int//Flatten//DeleteDuplicates];
+			If[OptionValue[deBug],Print["int: ",int];Print["isp: ",isp]];
+			isp=isp//Flatten//DeleteDuplicates;
+			rep2=Join[tem1,{Thread@Rule[isp,isp/Subscript[x, 0]],Subscript[x, 0]->0},DeleteCases[tem2,_?(MemberQ[int,Keys[#]]&)],(Thread@Rule[int,int/.tem2])]//Delete[#,-1]&;
+		]
+	];
+	Return[{rep1,rep2}];
+	(*result=Table[
+		tem1=remain[[edge[[i]]]];
+		tem=DeleteCases[tem1[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//ReverseSortBy[#,Length]&;
+		tem2=Cases[tem1[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//Flatten//DeleteDuplicates;
+		If[tem==={},(*if there are no infinity poles*)
+			{tem1[[All,1]]//Flatten//DeleteDuplicates,tem2//Flatten//DeleteDuplicates},
+			{Join[tem1[[All,1]],{Thread@Rule[Keys[tem2],Values[tem2]//.tem2//Factor]}]//Flatten//DeleteDuplicates,If[Length[tem]==1,tem//Flatten,Riffle[tem[[1]],tem[[2]]]//DeleteDuplicates]}
+		]
+		,{i,1,Length[edge]}];
+		(*here we define how to merge two compatible pole*)
+	Return[Join[remain[[Complement[Range[Length[remain]],edge//Flatten//DeleteDuplicates]]],result]//DeleteDuplicates];
+	(*we include those poles which are not compatible to any other poles separately*)
+	(*the final data form will be {{{a->0,b->0},{c->1}},{...},...}*)*)
+];
+
+
+Options[ApplyPoleToVar]={deBug->True};
+ApplyPoleToVar[poles_,var_]:=Module[{tem},
+	tem=poles//Flatten//DeleteDuplicates//GatherBy[#,(Last[#]===Infinity)&]&;
+	If[Length[tem]==1,Return[var/.tem]];
+	Return[Table[If[MemberQ[Keys[tem[[2]]],var[[i]]],g[var[[i]]/.tem[[1]]],var[[i]]/.tem[[1]]],{i,1,Length[var]}]];
+];
+
+
+Options[FindPoleMaps]={deBug->False};
+FindPoleMaps[poles_,var_,sector_:{},OptionsPattern[]]:=Module[{alist={},xl,tem,atem={},alisttem,l=2,max,subset,n,pos},
+	(*poles consists of three parts: poles, graph, cliques of the graph.*)
+	(*we find the minimal pole maps that can cover var*)
+	(*minimal pole map means this map only involve the variables in var with extra variables as less as possible*)
+	(*two poles can be merged only when they share the same cut*)
+	If[var==={},Return[{}]];
+	xl={Thread@Rule[Subscript[x,#]&/@sector,0],{}};
+	tem=poles[[1]];
+	alist=Reap[
+			Do[
+				If[ContainsAll[Keys[tem[[i]]//Flatten],var]&&CompatiblePoleQ[tem[[i]],xl],Sow[i]]
+			,{i,1,Length[tem]}]
+	][[2]];(*all the single pole maps that can cover var*)
+	If[OptionValue[deBug],Print["alist: ",alist]];
+	If[alist=!={},alist=alist[[1]]];
+	tem=DeleteCases[poles[[3]],_?(ContainsAny[#,alist]&)];(*remove cliques that already contain poles in alist*)
+	(*then we search in these remaining cliques for the minimal cover of var*)
+	(*Apply every possible cases to the same set of variables*)
+	tem=Join[List/@alist,tem];
+	atem=Reap[
+		Do[
+			If[ContainsAll[Keys[poles[[1]][[tem[[i]]]]//Flatten],var],Sow[{ApplyPoleToVar[poles[[1]][[tem[[i]]]],var],tem[[i]]}]];
+		,{i,1,Length[tem]}]
+	][[2]];
+	If[atem=!={},atem=atem[[1]]];
+	(*then collect all different maps and remove duplicate cases*)
+	atem=GatherBy[atem,First];
+	Return[atem[[All,1,2]]];(*for each group, we only need the first element, the remaining map will give the same results*)
+	
+	(*max=poles[[3,-1]]//Length;(*maximal length of clique*)
+	atem=tem;
+	While[l<=max,
+		(*l is number of poles we choose to form a cover. We start from the 2-pole cover*)
+		alisttem={};
+		pos={};
+		Do[
+			If[MyContainsAny[atem[[j]],alisttem],Continue[]];(*if this term is already a cover of the covers we have found*)
+			If[!AllTrue[poles[[1]][[atem[[j]]]],CompatiblePoleQ[#,xl]&],AppendTo[pos,j];Continue[]];(*if in the pole map, the required constraint not be satisfied*)
+			n=Length[atem[[j]]];(*length of this clique*)
+			If[n==l,(*if the length of clique equals to the number n of the n-pole cover we want*)
+				If[ContainsAll[Keys[poles[[1]][[atem[[j]]]]//Flatten],var],AppendTo[alisttem,atem[[j]]]],
+				subset=Subsets[atem[[j]],{l,n}];(*consider all its subset with at least length l*)
+				Do[
+					If[ContainsAll[Keys[poles[[1]][[subset[[k]]]]//Flatten],var],
+						AppendTo[alisttem,subset[[k]]];Break[](*if one already finds a subset which is a cover, then it is not necessary to search the rest of them*)
+					]
+				,{k,1,Length[subset]}]
+			]
+		,{j,1,Length[atem]}];
+		atem=Delete[atem,List/@pos];(*remove candidates that are not compatible with constraints*)
+		If[alisttem=!={},
+			atem=DeleteCases[atem,_?(MyContainsAny[#,alisttem]&)];(*remove those terms that is already a cover of the covers we have found*)
+		];
+		l=l+1;
+		alist=Join[alist,alisttem]//DeleteDuplicates;
+		If[OptionValue[deBug],Print["length: ",l-1," alisttem: ",alisttem]];
+		atem=DeleteCases[atem,_?(Length[#]<l&)];
+	];*)
+	(*alist is all the maps we find for the set var*)
+	(*then we merge multiple pole map to single pole map*)
+	(*Return[Table[If[Head[alist[[i]]]===List,{MergePoles[poles[[1]][[alist[[i]]]]],alist[[i]]},{poles[[1,alist[[i]]]],{alist[[i]]}}],{i,1,Length[alist]}]];*)
+	Return[alist];
+];
+
+
 Options[ApplyPolesToAlgLetter1]={Sector->{},AdRep->{},deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True,NoPathInfo->True};
-ApplyPolesToAlgLetter1[poles_,letters_,reform_,krep_,OptionsPattern[]]:=Module[{start,polepath,letterpath,kletters={},tem,ntem,glist,glistd,Glist,ll,nletters={},sletters={},var,rep,rep1,gr,ga,isp,pos,path,dis},
+ApplyPolesToAlgLetter1[opoles_,letters_,reform_,krep_,OptionsPattern[]]:=Module[{start,poles,polepath,letterpath,kletters={},tem,ntem,glist,glistd,Glist,ll,nletters={},sletters={},var,assoc,rep,rep1,gr,ga,isp,pos,path,dis},
 start=SessionTime[];
+(*first find all possible pole maps for the algebraic letters*)
+tem=Reap[
+	Do[
+		Sow[(letters[[i,1]]//Cases[#,_G,Infinity]&//DeleteDuplicates)/.{G[a_,b_]:>GramMat[a,b,krep]}//Cases[#,Subscript[x,_],Infinity]&//DeleteDuplicates//Sort];(*all Baikov variables involved in an algebraic letter*)		
+	,{i,1,Length[letters]}]
+][[2]];
+If[var=!={},var=tem[[1]]//DeleteDuplicates];
+assoc=Association[Table[Rule[var[[i]],FindPoleMaps[opoles,var[[i]]]],{i,1,Length[var]}]];(*the association that associate a baikov variable list to a list of pole maps*)
+If[OptionValue[deBug],Print["all poles map found ",SessionTime[]-start];Print[Keys[assoc]]];
+
 Do[
 	If[OptionValue[deBug],Print[SessionTime[]-start]];
 	(*letterpath=letters[[i,3]];*)
 	ga=((Cases[letters[[i,1]],Power[z_,1/2]->z,Infinity]//DeleteDuplicates)[[1]])/.{G[{},{}]->1};(*algebraic part of letter*)
 	gr=(letters[[i,1]][[1]]//Numerator)/.{Power[_,1/2]->0};(*rational part of letter*)
 	tem=({gr,ga}//Cases[#,_G,Infinity]&)/.{G[a_,b_]:>GramMat[a,b,krep]};
+	var=Cases[tem,Subscript[x,_],Infinity]//DeleteDuplicates//Sort;(*get all Baikov variables involved in this letter*)
 	glist=Cases[{ga},_G,Infinity]//DeleteDuplicates;(*grams under square root*)
-	glistd=Cases[{letters[[i,2]]},_G,Infinity]//DeleteDuplicates;(*grams corresponding to the multiplication of numeritor and denominator of algebraic letter*)
-	If[OptionValue[deBug],Print["ga: ",ga];Print["gr: ",gr]];
-	If[OptionValue[PathDis],
+	glistd=Cases[{letters[[i,2]]},_G,Infinity]//DeleteDuplicates;(*grams corresponding to the multiplication of numerator and denominator of algebraic letter*)
+	If[OptionValue[deBug],Print["ga: ",ga];Print["gr: ",gr];Print["var: ",var]];
+	
+	(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+	(*If[OptionValue[PathDis],
 		var=glist/.{G->List}//Variables;(*the variables involved*)
 		If[OptionValue[deBug],Print["glist: ",glist];Print["glistd: ",glistd]];
 		ll=(Length[#[[1]]]&/@Join[glist,glistd]);
@@ -1492,11 +1751,15 @@ Do[
 		];
 		(*------------------find the path of grams which are used to construct this letter----------------*)
 		If[OptionValue[deBug],Print["pos: ",pos];Print["path: ",path]];
-	];
+	];*)
+	(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+	
 	If[OptionValue[deBug],Print[SessionTime[]-start]];
-	If[FreeQ[tem,x],
-		(*when this letter consists of pure kinematics gram*)
-		If[OptionValue[PathDis]&&OptionValue[KinePath],
+	If[var==={},
+		(*when this letter consists only of pure kinematics gram*)
+		
+		(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+		(*If[OptionValue[PathDis]&&OptionValue[KinePath],
 			(*consider two different types of letters separately*)
 			(*Print["letter: ",letters[[i]]];*)
 			If[Abs[letters[[i,4]]]==1,
@@ -1507,13 +1770,17 @@ Do[
 				dis=PathsDistance[path[[1]],path[[2]]];
 				If[dis>2,AppendTo[sletters,letters[[i]]];Continue[],If[dis==2&&!GramPCQ[glist],(*Print["letter: ",letters[[i]]];*)AppendTo[sletters,letters[[i]]];Continue[]]];
 			]
-		];
+		];*)
+		(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+		
 		If[!AdmissiblePoleQ[glist,{},OptionValue[PermSq],krep],Continue[],AppendTo[kletters,{letters[[i,1]],{},letters[[i,4]]}]];
 		Continue[],
 		
 		(*when this letter consists of gram which is not free from loop moemnta*)
 		(*If[OptionValue[PathDis]&&PathsDistance[path[[1]],path[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]];*)
-		If[OptionValue[PathDis],
+		
+		(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+		(*If[OptionValue[PathDis],
 			(*consider two different types of letters separately*)
 			If[Abs[letters[[i,4]]]==1,
 				(*note that there is a special case where one Gram is G[{},{}], in this case path has only one element.*)
@@ -1526,10 +1793,15 @@ Do[
 			];
 			(*If[letters[[i,4]]==1&&PathsDistance[path[[1]],path[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]];
 			If[letters[[i,4]]==2&&PathsDistance[{letterpath[[1]]},letterpath[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]]*)
-		];
+		];*)
+		(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
+		
 		(*ntem=GramMat[#[[1]],#[[2]],krep]&/@glist;
 		pos=Table[If[FreeQ[ntem[[k]],x],{k}],{k,1,Length[ntem]}]//DeleteCases[#,Null]&;(*delete Gram which doesn't depend on Baikov variables*)
 		path=Delete[path,pos];*)
+		
+		pos=assoc[var];
+		poles=Table[If[Head[pos[[i]]]===List,{MergePoles[opoles[[1]][[pos[[i]]]]],pos[[i]]},{MergePoles[{opoles[[1,pos[[i]]]]}],{pos[[i]]}}],{i,1,Length[pos]}];(*the pole maps needed*)
 	];
 	If[OptionValue[PermSq]==={},
 		(*in this case, we will search letters by relations between poles and letter ansatz. This approach is not preferred now*)
@@ -1570,13 +1842,13 @@ xl=Append[xl,Subscript[x, 0]];
 d=Length[xl];
 tem=Numerator[exp/.{Subscript[x,i_]:>Subscript[x,i]/Subscript[x, 0]}//Together];
 Q=Table[If[i==j,Coefficient[tem,xl[[i]],2]//Factor,Coefficient[tem,xl[[i]]*xl[[j]]]/2//Factor],{i,1,d},{j,1,d}];
-Return[{Q,xl}];
+Return[{Q,xl}/.{Subscript[x, 0]->1}];(*here x0 is just an auxiliary variable*)
 ];
 
 
 MixList[list1_,list2_]:=Module[{l,r},
 l=Min[Length[list1],Length[list2]];
-r=Partition[Riffle[Take[list1,l],Take[list2,l]],2];
+r=Flatten/@Partition[Riffle[Take[list1,l],Take[list2,l]],2];(*make sure every element is a replacement list*)
 If[Length[list2]>l,r=Join[r,Drop[list2,l]],r=Join[r,Drop[list1,l]]];
 If[FreeQ[r,x]||FreeQ[r,y],r=r//Flatten];
 Return[r//DeleteCases[#,{}]&];
@@ -1584,7 +1856,7 @@ Return[r//DeleteCases[#,{}]&];
 
 
 Options[ApplyPoleToQM]={deBug->False,AdRep->{}};
-ApplyPoleToQM[poles_,Gram_,krep_,OptionsPattern[]]:=Module[{QM,tem,ntem,rep,rep1,isp,xll,pole,result={},rpolesx,rpolesy},
+ApplyPoleToQM[poles_,Gram_,krep_,OptionsPattern[]]:=Module[{QM,tem,ntem,rep,rep1,isp,xll,pole,result={},rpolesx,rpolesy,pos},
 If[Length[poles]<2,Message[ApplyPoleToQM::err,poles];Return[$Failed]];
 
 rpolesx=Table[{},{i,1,Length[poles]}];
@@ -1593,17 +1865,30 @@ QM=GetQuadMatrix[Det[Gram/.{G[a_,b_]:>GramMat[a,b,krep]}]];
 If[OptionValue[deBug],Print["QM: ",QM]];
 xll=Table[QM[[2]]/.poles[[i,1]],{i,1,Length[poles]}];
 Do[
-pole=poles[[j]];
-Do[
-If[!FreeQ[pole[[k]],Infinity],
-rep={Subscript[x, 0]->0};
-ntem=DeleteCases[pole[[k]],Rule[_,Infinity]];
-rep1=If[ntem=!={},Drop[ntem,-1],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*),
-rep=pole[[k]];rep1={Subscript[x, 0]->1}];
-rpolesx[[j]]=Join[rpolesx[[j]],rep,rep1];
-rpolesy[[j]]=rpolesx[[j]]/.{x->y};
-(*xll[[j]]=xll[[j]]//.rep//.rep1*)
-,{k,2,Length[pole]}]
+	pole=poles[[j]];
+	Do[
+		If[!FreeQ[pole[[k]],Infinity],
+			rep=Split[pole[[k]],(Last[#1]===Last[#2])&];
+			ntem=Table[If[FreeQ[rep[[i]],Infinity],rep[[i]],{rep[[i]],Subscript[x, 0]->0}/.{Rule[Subscript[x,a_],Infinity]:>Rule[Subscript[x,a],Subscript[x,a]/Subscript[x,0]]}],{i,1,Length[rep]}]//Flatten[#,1]&;
+			isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;(*keep track of variables taken to infinity*)
+			(*Do[
+				pos=Position[Keys[ntem],isp[[i]]];
+				If[Length[pos]>1,Continue[],If[ntem[[pos[[1,1]]+1,1]]=!=Subscript[x, 0],ntem=Insert[ntem,Subscript[x, 0]->0,pos[[1,1]]+1]]];
+			,{i,1,Length[isp]}];(*it is different whether taking variables to infinity one by one or taking them to infinity at one time. *)*)
+			If[OptionValue[deBug],Print["ntem: ",ntem];Print["poles: ",pole[[k]]];Print["isp: ",isp]];
+			(*rep=Thread@Rule[isp,isp/Subscript[x, 0]];
+			ntem=DeleteCases[pole[[k]],Rule[_,Infinity]];*)
+			rep={};
+			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],Print["not projective curve!: ",ntem];ntem],{}]
+			(*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*),
+			
+			pos=Position[pole[[k]],{__},1];
+			If[pos==={},rep=pole[[k]];rep1={Subscript[x, 0]->1},rep={pole[[k]][[pos[[1,1]]]],Subscript[x, 0]->0};rep1=Delete[pole[[k]],pos[[1,1]]]];
+		];
+		rpolesx[[j]]=Join[rpolesx[[j]],rep,rep1];
+		rpolesy[[j]]=rpolesx[[j]]/.{x->y};
+		(*xll[[j]]=xll[[j]]//.rep//.rep1*)
+	,{k,2,Length[pole]}]
 ,{j,1,Length[poles]}];
 (*Now we get all the possible xll*)
 (*tem=Partition[Riffle[xll,poles],2]//DeleteDuplicatesBy[#,First]&;
@@ -1611,48 +1896,62 @@ If[OptionValue[deBug],Print["tem: ",tem]];
 xll=tem[[All,1]];
 rpoles=tem[[All,2]];*)
 Do[
-Do[
-tem=SpecialSimplify[{xll[[i]] . QM[[1]] . (xll[[j]]/.{x->y}),(xll[[i]] . QM[[1]] . xll[[i]])*((xll[[j]]/.{x->y}) . QM[[1]] . (xll[[j]]/.{x->y}))},AdRep->Join[MixList[rpolesx[[i]],rpolesy[[j]]],OptionValue[AdRep]]];
-If[((tem[[1]]-Sqrt[tem[[2]]]//Factor)===0)||((tem[[1]]+Sqrt[tem[[2]]]//Factor)===0),Continue[]];
-AppendTo[result,{Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&],Gram,{poles[[i]],poles[[j]]}}]
-,{j,i+1,Length[xll]}]
+	Do[
+		tem=SpecialSimplify[{xll[[i]] . QM[[1]] . (xll[[j]]/.{x->y}),(xll[[i]] . QM[[1]] . xll[[i]])*((xll[[j]]/.{x->y}) . QM[[1]] . (xll[[j]]/.{x->y}))},AdRep->Join[MixList[rpolesx[[i]],rpolesy[[j]]],OptionValue[AdRep]]];
+		If[((tem[[1]]-Sqrt[tem[[2]]]//Factor)===0)||((tem[[1]]+Sqrt[tem[[2]]]//Factor)===0),Continue[]];
+		AppendTo[result,{Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&],Gram,{poles[[i]],poles[[j]]}}]
+	,{j,i+1,Length[xll]}]
 ,{i,1,Length[xll]}];
 Return[result];
 ];
 
 
 Options[ApplyPolesToAlgLetter2]={AdRep->{},deBug->False,PermSq->{}};
-ApplyPolesToAlgLetter2[poles_,ogram_,reform_,krep_,OptionsPattern[]]:=Module[{start,gram,polepath,tem,ntem,glist,Glist,ll,nletters={},pos,path,adpole={}},
+ApplyPolesToAlgLetter2[opoles_,ogram_,reform_,krep_,OptionsPattern[]]:=Module[{start,gram,polepath,poles,tem,ntem,var,glist,Glist,ll,nletters={},pos,path,adpole={},assoc},
 start=SessionTime[];
+If[OptionValue[deBug],Print["Calculation starts!"]];
 
 If[ogram==={},gram=reform[[All,1]]//DeleteDuplicates[#,EquivalentGramQ[#1,#2,krep]&]&,gram=ogram//DeleteDuplicates[#,EquivalentGramQ[#1,#2,krep]&]&];
 (*when ogram is {}, we directly calculate all possible letter from reform. We will delete those equivalent Grams*)
+ntem=Reap[
+	Do[
+		tem=gram[[i]]/.{G[a_,b_]:>GramMat[a,b,krep]};
+		If[FreeQ[tem,x],Continue[]];
+		If[Exponent[Det[tem/.{Subscript[x,e_]:>Subscript[x,e]*R}],R]>2,Continue[]];(*polynomial not a quadratic cannot be used in the second ansatz*)
+		Sow[gram[[i]],a];(*keep those grams satisfying constraints*)
+		var=Cases[tem,Subscript[x,_],Infinity]//DeleteDuplicates//Sort;
+		Sow[var,b](*the Baikov variables of corresponding gram*)
+	,{i,1,Length[gram]}]
+][[2]];
+If[ntem=!={},gram=ntem[[1]];var=ntem[[2]]//DeleteDuplicates];
+assoc=Association[Table[Rule[var[[i]],FindPoleMaps[opoles,var[[i]]]],{i,1,Length[var]}]];(*the association that associate a baikov variable list to a list of pole maps*)
+If[OptionValue[deBug],Print["var: ",Short[Keys[assoc],10]," length of grams: ",Length[gram]]];
 Do[
-adpole={};
-tem=gram[[i]]/.{G[a_,b_]:>GramMat[a,b,krep]};
-If[FreeQ[tem,x],Continue[]];
-If[Exponent[Det[tem/.{Subscript[x,e_]:>Subscript[x,e]*R}],R]>2,Continue[]];(*polynomial not a quadratic cannot be used in the second ansatz*)
-glist=Cases[{gram[[i]]},_G,Infinity]//DeleteDuplicates;
-(*If[OptionValue[deBug],Print["glist: ",glist]];*)
-If[OptionValue[deBug],Print["gram: ",glist[[1]]]];
-If[OptionValue[PermSq]==={},
-ll=(Length[#[[1]]]&/@glist);
-Glist=Select[reform,MemberQ[ll,Length[#[[1,1]]]]&];
-pos=FindGram[glist,Glist[[All,1]],krep];
-path=(Union@@(Glist[[#,3]]))&/@pos;(*paths for grams in the square root*)
-Do[
-polepath=poles[[j,2]]//SortBy[#,Length]&;
-If[IntersectingQ[path[[1]],polepath],AppendTo[adpole,poles[[j,1]]]];
-(*get all admissible poles that can be substituted into the gram matrix*)
-,{j,1,Length[poles]}],
-(*In this case, we use additional information to constrain the form*)
-Do[
-If[AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],AppendTo[adpole,poles[[j,1]]]]
-,{j,1,Length[poles]}]
-];
-(*If[OptionValue[deBug],Print["adpole: ",adpole]];*)
-If[Length[adpole]<2,Continue[]];(*if there are less than 2 admissible poles, then we can't construct from this gram*)
-AppendTo[nletters,ApplyPoleToQM[adpole,gram[[i]],krep]//DeleteDuplicatesBy[#,First]&//DeleteCases[#,_?(FreeQ[#,Power[_,1/2]]&)]&];
+	adpole={};
+	glist=Cases[{gram[[i]]},_G,Infinity]//DeleteDuplicates;
+	var=Cases[gram[[i]]/.{G[a_,b_]:>GramMat[a,b,krep]},Subscript[x,_],Infinity]//DeleteDuplicates//Sort;
+	(*If[OptionValue[deBug],Print["glist: ",glist]];*)
+	(*If[OptionValue[deBug],Print["gram: ",glist[[1]]]];*)
+	If[OptionValue[PermSq]==={},
+		ll=(Length[#[[1]]]&/@glist);
+		Glist=Select[reform,MemberQ[ll,Length[#[[1,1]]]]&];
+		pos=FindGram[glist,Glist[[All,1]],krep];
+		path=(Union@@(Glist[[#,3]]))&/@pos;(*paths for grams in the square root*)
+		Do[
+			polepath=Complement[xl,Keys[Flatten[opoles[[1,j]]]]]//ReverseSort;
+			If[IntersectingQ[path[[1]],polepath],AppendTo[adpole,opoles[[1,j]]]];
+			(*get all admissible poles that can be substituted into the gram matrix*)
+		,{j,1,Length[opoles[[1]]]}],
+		(*In this case, we use additional information to constrain the form*)
+		pos=assoc[var];
+		poles=Table[If[Head[pos[[i]]]===List,{MergePoles[opoles[[1]][[pos[[i]]]]],pos[[i]]},{MergePoles[{opoles[[1,pos[[i]]]]}],{pos[[i]]}}],{i,1,Length[pos]}];(*the pole maps needed*)
+		Do[
+			If[AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],AppendTo[adpole,poles[[j,1]]]]
+		,{j,1,Length[poles]}]
+	];
+	(*If[OptionValue[deBug],Print["adpole: ",adpole]];*)
+	If[Length[adpole]<2,Continue[]];(*if there are less than 2 admissible poles, then we can't construct from this gram*)
+	AppendTo[nletters,ApplyPoleToQM[adpole,gram[[i]],krep]//DeleteDuplicatesBy[#,First]&//DeleteCases[#,_?(FreeQ[#,Power[_,1/2]]&)]&];
 ,{i,1,Length[gram]}];
 Return[nletters//Flatten[#,1]&//DeleteDuplicatesBy[#,First]&];
 ];
@@ -1666,14 +1965,16 @@ permsq=OptionValue[PermSq];
 permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
 Print["totally ",l," sectors need to be analyzed"];
 Print["analyzing first type construction..."];
-Monitor[Do[
-If[OptionValue[deBug],PrintTemporary["subset: ",algletter[[a,2]]," session time: ",SessionTime[]-start]];
-tem=ApplyPolesToAlgLetter1[poles,algletter[[a,1]],reform,krep,PermSq->permsq,PathDis->OptionValue[PathDis],KinePath->OptionValue[KinePath],LoopPath->OptionValue[LoopPath](*,deBug->If[algletter[[a,2]]==={3,4,5,6,7},True,False]*)];
-ntem=Flatten[tem[[{1,2}]],1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;
-(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
-AppendTo[result,ntem];
-If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
-,{a,1,Length[algletter]}],ProgressIndicator[a,{1,Length[algletter]}]];
+Monitor[
+	Do[
+		If[OptionValue[deBug],PrintTemporary["subset: ",algletter[[a,2]]," session time: ",SessionTime[]-start]];
+		tem=ApplyPolesToAlgLetter1[poles,algletter[[a,1]],reform,krep,PermSq->permsq,PathDis->OptionValue[PathDis],KinePath->OptionValue[KinePath],LoopPath->OptionValue[LoopPath](*,deBug->If[algletter[[a,2]]==={3,4,5,6,7},True,False]*)];
+		ntem=Flatten[tem[[{1,2}]],1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;
+		(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
+		AppendTo[result,ntem];
+		If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
+	,{a,1,Length[algletter]}]
+,ProgressIndicator[a,{1,Length[algletter]}]];
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
@@ -1707,8 +2008,8 @@ DistributeDefinitions[poles,algletter,reform,krep,permsq,pathdis,looppath,kinepa
 SetSharedVariable[result,spresult];
 ParallelDo[
 (*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
-AppendTo[result,ApplyPolesToAlgLetter1[poles,algletter[[i,1]],reform,krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
-If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
+	AppendTo[result,ApplyPolesToAlgLetter1[poles,algletter[[i,1]],reform,krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+	If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
 ,{i,1,Length[algletter]}];
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
