@@ -47,7 +47,7 @@ ResolveSingleVariable::additional="This construction may be viable by proper var
 ResolveSingularities::usage="ResolveSingularities[intset,hintset] resolves singularities for all the variables in intset and hintset. It is the multivariate version of ResolveSingleVariable[].";
 ResolveSingularities::err="There is something wrong with the arguments. They are all irrelevant to Baikov variables.";
 ResolveSingularities::warning="In this case it is equivalent to integrating this variable out, so we won't consider its pole here but will include relevant Landau varieties. `1`.";
-ResolveSingularities::oddpower="There is an odd power of variable under square root! The infinity is a branch cut.";
+ResolveSingularities::oddpower="There is an odd power higher than 1 of variable under square root or it's a linear expression but with no other poles in the denominator! The infinity is a branch cut. Its expression is `1` and the input is `2`.";
 ResolveSingularities::elliptic="Elliptic case encountered!";
 
 Trans2Inf::usage="Trans2Inf[intset,hintset,xl] transforms the polynomial to infinity plane which corresponds to second Landau singularities.";
@@ -464,6 +464,9 @@ If[AnyTrue[tem,PerfectSquareQ],Throw[True],Throw[False]];
 ];
 
 
+RemoveCoeff[exp_]:=If[exp===0,0,Times@@Power@@@(FactorList[exp]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)];
+
+
 Options[ResolveSingleVariable]={deBug->False,LastVar->False,HigherPower->False,DLog->False,AdInfo->True,SelectQ->True};
 ResolveSingleVariable[iintset_,ihintset_,z_,OptionsPattern[]]:=Module[{intset,hintset,p,tem,tem1,tem2,coe,irintset={},rintset={},irhintset={},rhintset={},result={},sresult={},sol,hpintset={},dlog={},a1,b1},
 intset=iintset;hintset=ihintset;
@@ -504,8 +507,10 @@ If[rhintset=!={},
 		If[tem1>1,
 			Message[ResolveSingleVariable::warning,tem1];(*polynomial under square root of odd power higher than 2*)
 			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic];Print["tem: ",tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
-		];
-		coe=0,(*we don't consider this case since it is hardly related to MPL*)
+			coe=0,(*we don't consider this case since it is hardly related to MPL*)
+			coe=Prime[2024](*when this is a linear polynomial it can be related to dlog like Sqrt[b*a-c]/(z-a)/Sqrt[b*z-c], but we need to keep in mind that Sqrt[b]/Sqrt[b*z-c] is not a dlog*)
+			(*here we use coe=Prime[2024] which is chosen randomly to distinguish it from the following case Sqrt[a]/Sqrt[az^2+bz+c] which is a dlog form*)
+		],
 		(*even power case*)
 		If[tem1>2,
 			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic];Print["tem: ",tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
@@ -514,20 +519,22 @@ If[rhintset=!={},
 		]
 	],
 	(*if there are no square roots in the integrand.*)
-	coe=1
+	coe=Prime[2024](*here we use coe=Prime[2024] which is chosen randomly, it should be understood as an identification code*)
 ];
 
-(*one type of dlog*)
-If[OptionValue[DLog],
-If[coe=!=0&&coe=!=1,
-	tem1=PerfectSquareSplit[coe];
-	If[OptionValue[SelectQ],
-		tem1={{},tem1[[2]]};(*--------------------(^_^)--------------------*)
-		(*here we remove those terms from perfect square roots under square root which we believe to be spurious letters*)
+(*one type of dlog constructed with only one square root in the denominator Sqrt[a]/Sqrt[a*z^2+bz+c]*)
+If[coe=!=0,
+	If[coe===Prime[2024],
+		coe=1(*redefine coe to be 1*),
+		(*the following is the case Sqrt[a]/Sqrt[a*z^2+bz+c]*)
+		tem1=PerfectSquareSplit[coe];
+		If[OptionValue[SelectQ],
+			tem1={{},tem1[[2]]};(*--------------------(^_^)--------------------*)
+			(*here we remove those terms from perfect square roots under square root which we believe to be spurious letters*)
+		];
+		AppendTo[sresult,{{Sqrt[Times@@rhintset]},Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}];
+		AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}];
 	];
-	AppendTo[result,{{Times@@rhintset},Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}];
-	AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}];
-];
 ];
 
 If[OptionValue[deBug],Print["coe: ",coe];Print["result: ",result]];
@@ -556,15 +563,15 @@ Do[
 			(*if there are no square roots*)
 			(*take pole at this solution*)
 			If[!OptionValue[DLog],
-				AppendTo[result,{sol[[i,1]],Join[irintset,FactorList[Coefficient[rintset[[i]],z,p[[i]]]][[All,1]]//Flatten,(FactorList[#][[All,1]]&/@((rintset/.sol[[i,1]]//Factor)//Numerator))//Flatten]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,irhintset}],
+				AppendTo[result,{sol[[i,1]],Join[irintset,(*{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)},*)(RemoveCoeff/@(NumeratorDenominator[(rintset/.sol[[i,1]]//Factor)]//Flatten))]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,irhintset}],
 				(*dlog type construction*)
-				AppendTo[dlog,{Join[irintset,FactorList[Coefficient[rintset[[i]],z,p[[i]]]][[All,1]]//Flatten],irhintset}];(*a/(a*z-b) type dlog*)
-				Table[If[k!=i,AppendTo[dlog,{Join[irintset,FactorList[rintset[[k]]/.sol[[i,1]]//Factor//Numerator][[All,1]]//Flatten],irhintset}]],{k,1,Length[rintset]}](*(bc-ad)/(az-b)/(cz-d) type dlog*)
+				AppendTo[dlog,{Join[irintset,{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)}],irhintset}];(*a/(a*z-b) type dlog*)
+				Table[If[k!=i,AppendTo[dlog,{Join[irintset,{RemoveCoeff[Times@@NumeratorDenominator[rintset[[k]]/.sol[[i,1]]//Factor]]}],irhintset}]],{k,1,Length[rintset]}](*(bc-ad)/(az-b)/(cz-d) type dlog*)
 			]
 			,
 			(*if there are square roots*)
 			If[Exponent[Times@@rhintset,z]>2,Continue[]];
-			tem=rhintset/.sol[[i,1]]//Factor//Numerator;
+			tem=Times@@@NumeratorDenominator[rhintset/.sol[[i,1]]//Factor];(*move denominator to numerator*)
 			(*when the polynomials under square root vanish, then this is a branch cut, not a pole*)
 			If[!FreeQ[tem,0],Continue[]];
 			If[OptionValue[SelectQ],
@@ -575,7 +582,7 @@ Do[
 			AppendTo[tem2,{i,Times@@@tem1}];(*for later construction*)
 			If[!OptionValue[DLog],
 				(*AppendTo[result,{sol[[i,1]],Join[irintset,tem1[[1]]]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]*)
-				AppendTo[result,{sol[[i,1]],Join[irintset,tem1[[1]](*,FactorList[Coefficient[rintset[[i]],z,p[[i]]]][[All,1]]//Flatten*),(FactorList[#][[All,1]]&/@(((rintset//DeleteCases[#,_?(Exponent[#,z]>1&)]&)/.sol[[i,1]]//Factor)//Numerator))//Flatten]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}],
+				AppendTo[result,{sol[[i,1]],Join[irintset,tem1[[1]](*,FactorList[Coefficient[rintset[[i]],z,p[[i]]]][[All,1]]//Flatten*),((((rintset(*//DeleteCases[#,_?(Exponent[#,z]>1&)]&*))/.sol[[i,1]]//Factor)//Numerator))//Flatten]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}],
 				(*dlog of type (Sqrt[ad^2+bd+c]/(z-d)/(Sqrt[az^2+bz+c]))*)
 				(*Note that when two polynomials are rational, we can always perform the variable transformation, so we can set some poly in rintset at this pole in the same time*)
 				AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]
@@ -597,10 +604,11 @@ Do[
 		]
 	]
 ,{i,1,Length[rintset]}];
+
 (*a sepcial kind of dlog, they are actually combinations of above dlogs already constructed, but they may give new varieties*)
 If[Length[tem2]>1,
 	(*we search for the possible combinations of dlogs, they may give new varieties.*)
-	tem=GatherBy[tem2,Last[#][[2]]&]//DeleteCases[#,_?(Length[#]<2&)]&;
+	tem=Gather[tem2,(((Last[#1][[2]]-Last[#2][[2]])//Expand)===0||((Last[#1][[2]]+Last[#2][[2]])//Expand)===0)&]//DeleteCases[#,_?(Length[#]<2&)]&;(*we also consider the cases where the square roots are the same except for a minus sign *)
 	Do[
 		tem1=tem[[k]];(*tem1 will be like {{1,{..,..}},{3,{..,..}}}*)
 		Table[
@@ -631,7 +639,7 @@ If[!OptionValue[DLog],
 
 
 Options[ResolveSingularities]={deBug->False,SortQ->True,AdInfo->True,SelectQ->True};
-ResolveSingularities[iintset_,ihintset_,OptionsPattern[]]:=Module[{intset,hintset,xl,nl,lv={},sq={},sol={},tem,p,tem1,tem2,sol1={},ssol={},result},
+ResolveSingularities[iintset_,ihintset_,OptionsPattern[]]:=Module[{intset,hintset,xl,nl,lv={},sq={},sol={},tem,p,tem1,tem2,sol1={},ssol={},result,a1,b1},
 intset=iintset;hintset=ihintset;
 xl=Cases[{intset,hintset},Subscript[x,_],Infinity]//DeleteDuplicates;(*number of remaining ISPs*)
 If[xl==={},Message[ResolveSingularities::err];Return[$Failed]];
@@ -649,29 +657,34 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 		If[Exponent[intset[[i]],xl[[1]]]<2,
 			(*linear pole*)
 			AppendTo[sol,Solve[intset[[i]]==0,xl][[1]]];
-			AppendTo[lv,Coefficient[intset[[i]],xl[[1]],1]],
+			AppendTo[lv,Coefficient[intset[[i]],xl[[1]],1]]
+			If[OptionValue[deBug],Print["lv: ",lv," intset:",intset[[i]]]],
 			(*quadratic pole*)
 			AppendTo[ssol,{intset[[i]]}];
 			If[hintset=!={}&&!ExistRelationQ[intset[[i]],hintset],
 				If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{intset[[i]],hintset}];Print[{intset[[i]],hintset}]],
 				If[OptionValue[SelectQ],
-					tem=PerfectSquareSplit[Discriminant[intset[[i]],xl[[1]]]//Factor];
+					tem=PerfectSquareSplit[Discriminant[intset[[i]],xl[[1]]]];
 					tem={{},tem[[2]]};(*---------------------(^_^)-------------------------*)
 					(*here we remove those terms which arise from the perfect squares under square roots which we conjecture to be spurious*)
 					AppendTo[lv,Times@@tem[[2]]];
 					AppendTo[sq,Times@@tem[[2]]]
 					,
-					AppendTo[lv,(*Times@@tem[[2]]*)Discriminant[intset[[i]],xl[[1]]]//Factor];
-					AppendTo[sq,(*Times@@tem[[2]]*)Discriminant[intset[[i]],xl[[1]]]//Factor]
+					tem=PerfectSquareSplit[Discriminant[intset[[i]],xl[[1]]]];
+					lv=Join[lv,{Times@@tem[[1]],Times@@tem[[2]]}];
+					AppendTo[sq,Times@@tem[[2]]]
 				];
 			];
 		]
 	,{i,1,Length[intset]}];
 	If[hintset==={},
 		(*if there are no square roots*)
-		lv=Join[lv,(FactorList[#][[All,1]]&/@(Table[intset/.sol[[i]],{i,1,Length[sol]}]//Flatten))//DeleteCases[#,_?NumericQ]&//DeleteDuplicates];
+		lv=Join[lv,((*FactorList[#][[All,1]]&/@*)(Table[RemoveCoeff/@(NumeratorDenominator[intset/.sol[[i]]//Factor]//Flatten//DeleteDuplicates),{i,1,Length[sol]}]//Flatten))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates];
+		(*here, it need to stress that (a*b)/(z*(z+a)(z-b)) can not be a dlog, only two linear term can be combined to a dlog form a/(z(z-a)) or ((a-b)/((z-a)(z-b))). but familiar construction can work for multivariate case because we can perform a change of variables*)
+		If[OptionValue[deBug],Print["lv: ",lv," intset:",intset]];
 		AppendTo[sq,1];(*this corresponds to the case 1/x, that is one single pole of sol[[i]], it will multiply a factor from coefficients*)
-		sol1=sol,
+		sol1=sol;
+		AppendTo[sol1,{xl[[1]]->Infinity}](*in this case Infinity pole is present, not a branch cut*),
 		
 		(*when there are square roots in the denominator*)
 		(*here we only concern square roots in dlog, so we won't consider the combinations of dlog any more since this won't give us new square root*)
@@ -682,23 +695,28 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 			If[Length[hintset]>1,Table[lv=Join[lv,{Resultant[hintset[[i]],hintset[[j]],xl[[1]]]//Factor}],{i,1,Length[hintset]},{j,i+1,Length[hintset]}]]
 		];(*elliptic case*)
 		AppendTo[sq,1];
-		If[Length[intset]>0,lv=Join[lv,Table[intset/.sol[[i]],{i,1,Length[sol]}]//Flatten//Factor//DeleteCases[#,_?NumericQ]&//DeleteDuplicates]];
+		If[Length[intset]>0,lv=Join[lv,Table[intset/.sol[[i]],{i,1,Length[sol]}]//NumeratorDenominator//Flatten//Factor//DeleteCases[#,_?NumericQ]&//DeleteDuplicates]];
 		If[EvenQ[p],
 			lv=Join[lv,{Coefficient[tem,xl[[1]],p]}]//DeleteCases[#,0]&//DeleteDuplicates;
+			If[OptionValue[deBug],Print["lv: ",lv," tem:",tem]];
 			sq=sq*Coefficient[tem,xl[[1]],p]//DeleteCases[#,0]&//DeleteDuplicates;
 			(*pay attention that in this case, this square root coefficients should be multiplied to the former ones, because we are not considering a different construction here, it is in one construction process. Then in the last case, we are considering a different construction*)
 			sol1={};
+			tem2={};
 			Do[
-				tem1=hintset/.sol[[i]]//Factor;
+				tem1=Times@@@NumeratorDenominator[hintset/.sol[[i]]//Factor];
 				(*when the polynomials square root vanish under the outside pole, then it is a branch cut actually*)
 				If[FreeQ[tem1,0],
 					If[OptionValue[SelectQ],
-					tem1=hintset/.sol[[i]]//Factor//DeleteCases[#,_?PerfectSquareQ]&(*-----------------(^_^)-------------------*)
+					tem1=tem1//DeleteCases[#,_?PerfectSquareQ]&(*-----------------(^_^)-------------------*)
 					(*here we remove those terms which arising from perfect square under square root, they are conjectured to be spurious letters*)
 					];
-					lv=Join[lv,tem1];
-					sq=Join[sq,{Times@@tem1}];
-					AppendTo[sol1,sol[[i]]]
+					tem1=PerfectSquareSplit[Times@@tem1];
+					lv=Join[lv,{Times@@tem1[[1]],Times@@tem1[[2]]}];
+					If[OptionValue[deBug],Print["lv: ",lv," tem1:",tem1]];
+					sq=Join[sq,{Times@@tem1[[2]]}];
+					AppendTo[sol1,sol[[i]]];
+					AppendTo[tem2,{Numerator[(xl[[1]]-(xl[[1]]/.sol[[i]]))//Factor],Times@@@tem1}];(*for later construction*)
 					,
 					Continue[]
 				]
@@ -706,22 +724,48 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 			AppendTo[sol1,{xl[[1]]->Infinity}](*in this case Infinity pole is present, not a branch cut*)
 			,
 			If[p==1&&Length[sol]!=0,(*when there is a linear expression in the square root, Sqrt[ac-b]/(z-c)/Sqrt[az-b] is still a dlog*)
+			tem2={};
 			Do[
+				tem1=Times@@@NumeratorDenominator[hintset/.sol[[i]]//Factor];
 				If[FreeQ[tem1,0],
 					If[OptionValue[SelectQ],
-						tem1=hintset/.sol[[i]]//Factor//DeleteCases[#,_?PerfectSquareQ]&(*-----------------(^_^)-------------------*)
+						tem1=tem1//DeleteCases[#,_?PerfectSquareQ]&(*-----------------(^_^)-------------------*)
 						(*here we remove those terms which arising from perfect square under square root, they are conjectured to be spurious letters*)
 					];
-					lv=Join[lv,tem1];
-					sq=Join[sq,{Times@@tem1}];
-					AppendTo[sol1,sol[[i]]]
+					tem1=PerfectSquareSplit[Times@@tem1];
+					lv=Join[lv,{Times@@tem1[[1]],Times@@tem1[[2]]}];
+					If[OptionValue[deBug],Print["lv: ",lv," tem1:",tem1]];
+					sq=Join[sq,{Times@@tem1[[2]]}];
+					AppendTo[sol1,sol[[i]]];
+					AppendTo[tem2,{Numerator[(xl[[1]]-(xl[[1]]/.sol[[i]]))//Factor],Times@@@tem1}];(*for later construction*)
 					,
 					Continue[]
 				]
 			,{i,1,Length[sol]}],
-			Message[ResolveSingularities::oddpower];(*the remaining cases should be elliptic*)
+			Message[ResolveSingularities::oddpower,tem,{iintset,ihintset}];(*the remaining cases should be elliptic*)
 			];
-		]
+		];
+		
+		(*a sepcial kind of dlog, they are actually combinations of above dlogs already constructed, but they may give new varieties*)
+		If[Length[tem2]>1,
+			(*we search for the possible combinations of dlogs, they may give new varieties.*)
+			tem=Gather[tem2,(((Last[#1][[2]]-Last[#2][[2]])//Expand)===0||((Last[#1][[2]]+Last[#2][[2]])//Expand)===0)&]//DeleteCases[#,_?(Length[#]<2&)]&;(*we also consider the cases where the square roots are the same except for a minus sign *)
+			Do[
+				tem1=tem[[k]];(*tem1 will be like {{a*z+b,{..,..}},{c*z+d,{..,..}}}*)
+				Table[
+					a1=(tem1[[i,1]]*tem1[[j,2,1]]-tem1[[j,1]]*tem1[[i,2,1]])//Factor//Numerator;
+					b1=(tem1[[i,1]]*tem1[[j,2,1]]+tem1[[j,1]]*tem1[[i,2,1]])//Factor//Numerator;
+					If[FreeQ[a1,xl[[1]]],
+						lv=Join[lv,{a1}//Flatten//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates;
+						If[OptionValue[deBug],Print["lv: ",lv," a1:",a1]];
+					];
+					If[FreeQ[b1,xl[[1]]],
+						lv=Join[lv,{b1}//Flatten//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates;
+						If[OptionValue[deBug],Print["lv: ",lv," b1:",b1]];
+					];
+				,{i,1,Length[tem1]},{j,i+1,Length[tem1]}];
+			,{k,1,Length[tem]}];
+		];
 	],
 	
 	(*if there are more than one ISPs*)
@@ -816,14 +860,14 @@ Throw[brep];
 ];
 
 
-Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->True,SelectAllQ->False,AdInfo->False};
-PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tsingular={},cc,len},
+Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False};
+PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,bench,u,tsol,vrep},
 subset=Subsets[topsector]//ReverseSortBy[#,Length]&//DeleteCases[#,{}]&;
 zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];(*all zero sectors*)
 subset=DeleteCases[subset,_?(MemberQ[zerolist,Sector2Digits[#]]&)];(*remove all zero sectors*)
 Print["totally ",Length[subset]," sectors need to be analyzed!"];
 
-(*subset={{2,3,5,6,9,10,11,12}};*)
+(*subset={{1,3,4,5,6,7,8}};*)
 Do[(*analyze sector by sector*)
 	If[OptionValue[deBug],Print["subset: ",subset[[i]]]];
 	singular={};
@@ -874,7 +918,7 @@ Do[(*analyze sector by sector*)
 					AppendTo[LVlocal,tem];AppendTo[sqlocal,tem],
 					tem1=PerfectSquareSplit[tem];
 					intset=Join[intset,(tem1[[1]])/.adcut//DeleteCases[#,_?NumericQ]&];
-					tem1=PerfectSquareSplit[(Times@@(tem1[[2]])/.adcut)//Factor];
+					tem1=PerfectSquareSplit[(Times@@(tem1[[2]])/.adcut)];
 					intset=Join[intset,(tem1[[1]])//DeleteCases[#,_?NumericQ]&];
 					hintset=Join[hintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&];
 				]
@@ -909,7 +953,7 @@ Do[(*analyze sector by sector*)
 		intset=intset//DeleteDuplicates;
 		sqt=(Times@@sqlocal);
 		If[OptionValue[deBug],Print["intset,hintset: ",{intset,hintset}]];
-		tem=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo]];
+		tem=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo]];(*when len>1, it means that we should always apply our selection rule*)
 		If[OptionValue[deBug],Print["tem: ",tem];Print["sqlocal: ",sqlocal]];
 		tem1=tem[[1]];
 		sol=Join[sol,tem1//Flatten[#,1]&];
@@ -936,8 +980,52 @@ Do[(*analyze sector by sector*)
 		AppendTo[singular,{sol//DeleteDuplicates,LVlocal//DeleteDuplicates,sqlocal//DeleteDuplicates,brep[[j,1]]}]
 	,{j,1,Length[brep]}];
 	tem=singular[[All,2]];
-	tem=Table[(FactorList[#][[All,1]]&/@tem[[i]])//Flatten//DeleteCases[#,_?NumericQ]&,{i,1,Length[tem]}];
-	tsingular=AppendTo[tsingular,{singular[[All,{1,2,3,4}]],If[tem=!={},Intersection[Sequence@@(tem)],{}],If[tem=!={},Union[Sequence@@(tem)],{}],singular[[All,3]]//Flatten//DeleteDuplicates,subset[[i]]}]
+	(*now we try to remove all spurious letters, we identify them by two steps, the first step will rule out some and the second step rule all of them out in principle*)
+	If[Length[tem]>1,
+		tem3=Reap[Do[
+			var=Variables[tem[[k]]];
+			groebner=GroebnerBasis[tem[[k]],var];(*calculate the Groebner basis from one representation*)
+			tem2=Delete[tem,k];
+			tem1=Table[Position[(PolynomialReduce[#,groebner,var]&/@tem2[[l]])[[All,2]],_?(#=!=0&),1]//DeleteCases[#,{0}]&,{l,1,Length[tem2]}];(*Find those polynomials that can not be reduced by the groebner basis calculated before*)
+			Sow[Join[{tem[[k]]},Table[Delete[tem2[[l]],tem1[[l]]],{l,1,Length[tem2]}]]//Flatten]
+			,{k,1,Length[tem]}];
+		][[2]];
+		If[tem3=!={},tem3=tem3[[1]]];
+		tem3=Intersection[Sequence@@tem3],
+		tem3=tem[[1]]
+	];
+	tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
+	tem1=(FactorList[#][[All,1]]&/@tem3)//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates;
+	tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
+	(*in the last step, we check again the letters which can be spurious by the dimension calculation*)
+	tem3=Complement[tem1,tem2];
+	(*Print["subset: ",subset[[i]]];*)
+	(*If[subset[[i]]==={1,2,3,4,5,6,8},Print[" tem3: ",tem3];Print["cutr: ",cutr]];*)
+	Do[
+		flag=0;
+		pos=Position[singular[[All,2]],_?(MemberQ[#,tem3[[k]]]&),1];
+		brepr=(Delete[brep,pos]);
+		var=Variables[tem3[[k]]];
+		pow=Exponent[tem3[[k]],#]&/@var;
+		pos=FirstPosition[pow,1];
+		If[pos===Missing["NotFound"],
+			sol=FindInstance[Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]],var,Rationals,2];(*find two numeric solutions to check*)
+			If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",i];sol=FindInstance[{tem3[[k]]==0},var]],
+			tsol=Solve[tem3[[k]]==0,var[[pos]]][[1]];
+			sol=Table[vrep=Thread@Rule[Delete[var,pos],Table[Prime[2024+l*m],{m,1,Length[var]-1}]];Join[Thread@Rule[var[[pos]],var[[pos]]/.tsol/.vrep],vrep],{l,1,2}]//DeleteDuplicates
+		];
+		Do[
+			u=(((((brepr[[l,2,1]])//Gram2Poly[#,krep]&)/.cutr//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&)));
+			xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
+			If[xl==={},Continue[]];
+			u=Times@@Power@@@u;
+			bench=GetDimension[u,xl];
+			(*If[subset[[i]]==={1,3,4,5,6,7,8},Print["brep: ",brepr[[l,2,1]]," cut: ",cut," u: ",u,"sol: ",sol," tem3[[k]]: ",tem3[[k]]]];*)
+			If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench,flag=1;Break[]]
+		,{l,1,Length[brepr]}];
+		If[flag==1,tem1=Complement[tem1,{tem3[[k]]}]]
+	,{k,1,Length[tem3]}];
+	tsingular=AppendTo[tsingular,{singular[[All,{1,2,3,4}]],tem2,tem1,singular[[All,3]]//Flatten//DeleteDuplicates,subset[[i]]}]
 ,{i,1,Length[subset]}];
 Return[tsingular];
 ];

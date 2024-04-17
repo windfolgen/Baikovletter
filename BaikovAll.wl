@@ -9,7 +9,7 @@ The output will be in the form:
 The corresponding Baikov representation will be like const*Power[Gram1,power1]*Power[Gram2,power2]*..., 
 *)
 (*
-If you find any bug or suggest for this program, please contact: xhjiang@pku.edu.cn
+If you find any bug or suggest for this program, please contact: xhjiang@itp.ac.cn
 *)
 
 
@@ -21,8 +21,14 @@ y::usage="the variable for Baikov representation";
 G::usage="The function for Feynman integrals";
 j::usage="The function for Feynman integrals in LiteRed";
 \[Epsilon]::usage="the parameter for dimentional regularization";
+Protect[x,y,G,j,\[Epsilon]];
+
+(*some global path*)
+$SingularFilePath::usage="Path for temporary files of Singular.";
+$SingularPath::usage="Path for Singular excutable file.";
+
 (*dimension calculation*)
-GetDimension::uerr="u should in the form p1^a1...pn^an.";
+GetDimension::uerr="u should in the form p1^a1...pn^an.`1`";
 GetDimension::oerr="Omega should be a matrix.";
 GetDimension::time="Computation not completed within given time. You can adjust the Option of Time to a larger value. Default value is 300s.";
 GetDimension::usage="GetDimension[u_or_Om,z] calculates the dimension of a system from the u function or Omega matrix with respect to z. There are two method. One is using Singular to calculate the proper critical points from u, in which case z is a list of variables. Another is using Omega from intersection calculation in which case z is the last variable when performing intersection number calculation in some order.";
@@ -104,8 +110,8 @@ Begin["`Private`"]
 
 
 Options[GetDimension] = {Method -> "Singular", deBug -> False, fileDir
-     -> "/Users/windfolgen/GitRepos/Notes/Singular/dimension/", fileName 
-    -> "gen_dimension.sing", SingCommand -> "/opt/homebrew/bin/Singular",
+     -> $SingularFilePath, fileName 
+    -> "gen_dimension.sing", SingCommand -> $SingularPath,
      Time -> 300}; 
 
 GetDimension[uorom_, z_, OptionsPattern[]] :=
@@ -117,7 +123,7 @@ GetDimension[uorom_, z_, OptionsPattern[]] :=
             Print["Using Singular to get the dimension"]
         ];
         If[Head[uorom] =!= Times && Head[uorom] =!= Power,
-            Message[GetDimension::uerr];
+            Message[GetDimension::uerr,uorom];
             Return[$Failed]
         ];
         pl = (D[Log[uorom], #]& /@ z) // Together // Numerator;
