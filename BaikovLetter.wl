@@ -59,6 +59,9 @@ CheckValidity::usage="CheckValidity[brep,subset] checks whether a reprentation i
 ExistRelationQ::usage="ExistRelationQ[poly,sqpolylist] detects whether poly has some relation with a list of other polynomials under square roots sqpolylist.";
 
 
+FindCover::usage="FindCover[list] find a cover of the set of all variables present from a set of sets of these variables.";
+
+
 PolesAnalyze::usage="PolesAnalyze[result,topsector,krep,n] gives the possible poles, their paths and leading singularities related. topsector is specified by a number list like {1,2,3,4} where 1-st, 2-nd, 3-rd and 4-th propagators are present in this sector. n is the total number of Baikov variables in a family. Actually, this serves as a limited case of dlog construction. The output will be a list of forms like {{{pole,poly,path},...},polylist1,polylist2,sector}. poles are classified by their sectors.";
 PolesAnalyze::misp = "We need consider at least next-to-next-to-maximal cut for this sector: `1` and only `2` of the propagators can be set to 0.";
 
@@ -570,7 +573,7 @@ Do[
 			]
 			,
 			(*if there are square roots*)
-			If[Exponent[Times@@rhintset,z]>2,Continue[]];
+			If[OptionValue[LastVar]&&Exponent[Times@@rhintset,z]>2,Continue[]];(*when it is the last variable and the power is higher than 2 in square root, then this is elliptic or hyperelliptic function*)
 			tem=Times@@@NumeratorDenominator[rhintset/.sol[[i,1]]//Factor];(*move denominator to numerator*)
 			(*when the polynomials under square root vanish, then this is a branch cut, not a pole*)
 			If[!FreeQ[tem,0],Continue[]];
@@ -589,7 +592,7 @@ Do[
 			]
 		],
 		(*---------------------------when there is an irreducible quadratic polynomial in the denominator----------------------*)
-		If[rhintset=!={}&&!ExistRelationQ[rintset[[i]],rhintset],If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{rintset[[i]],rhintset}];Print[{rintset[[i]],rhintset}]];Continue[]];
+		If[rhintset=!={}&&!ExistRelationQ[rintset[[i]],rhintset],If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{rintset[[i]],rhintset}];Print[Short[{rintset[[i]],rhintset},20]]];Continue[]];
 		tem=Discriminant[rintset[[i]],z]*coe//Factor;
 		If[tem===0,Continue[]];(*if tem is 0, this construction will stop here*)
 		tem1=PerfectSquareSplit[tem];
@@ -646,8 +649,10 @@ If[xl==={},Message[ResolveSingularities::err];Return[$Failed]];
 
 (*sort the variable by their appearance in polynomials*)
 If[OptionValue[SortQ],
-	nl=Table[{Count[FreeQ[#,xl[[i]]]&/@Join[(*intset,*)hintset],False],Count[FreeQ[#,xl[[i]]]&/@Join[intset,hintset],False],xl[[i]]},{i,1,Length[xl]}]//SortBy[#,{First,#[[2]]&}]&;
-	xl=nl[[All,-1]];(*sort the variables by their appearing frequences*)
+	nl=Table[{Count[FreeQ[#,xl[[i]]]&/@Join[(*intset,*)hintset],False],(Exponent[#,xl[[i]]]&/@intset)//DeleteCases[#,0]&//Min,Count[FreeQ[#,xl[[i]]]&/@intset,True],xl[[i]]},{i,1,Length[xl]}]//SortBy[#,{First,#[[2]]&,#[[3]]&}]&;
+	xl=nl[[All,-1]];
+	(*sort the variables by their appearing frequences*)
+	(*here we set the rule for the order. In principle, we should consider every order. First, we choose those that appear less in the square root with most priority. Then we choose those with less power outside the square root. At last, we choose those appear more outside the square root *)
 ];
 If[OptionValue[deBug],Print["xl: ",xl]];
 
@@ -860,14 +865,45 @@ Throw[brep];
 ];
 
 
+Options[FindCover]={deBug->False};
+FindCover[list_,OptionsPattern[]]:=Module[{var,subset,flag=0,L=5,tem,temset,pos,result={},k=1},
+	var=list//Flatten//Union;
+	If[OptionValue[deBug],Print["var: ",var]];
+	If[Length[var]<=6,Return[{{var,{}}}]];
+	While[flag==0&&k<10,(*we will find a set of subsets which can cover the original set but with length smaller than the total set*)
+		subset=Subsets[var,{L}];
+		If[OptionValue[deBug],Print["subset: ",subset]];
+		tem=Table[Intersection[subset[[i]],#]&/@list,{i,1,Length[subset]}];
+		pos=Position[tem,_?(!FreeQ[#,{}]&),1]//DeleteCases[#,{0}]&;
+		subset=Delete[subset,pos];(*keep those subsets that has non-zero intersection with each set in the list*)
+		If[OptionValue[deBug],Print["subset: ",subset]];
+		If[Length[Union[subset//Flatten]]<Length[var],L=L+1;If[L>Length[var],Break[],Continue[]]];(*if remaining sets can not form a cover of original set, then we increase the length of these subsets*)
+		
+		(*then we pick a collection of sets that can cover the original set*)
+		AppendTo[result,{subset[[1]],Thread@Rule[#,Table[Prime[20+i*2],{i,1,Length[#]}]]&[Complement[var,subset[[1]]]]}];
+		temset=subset[[1]];
+		While[flag==0&&k<10,
+			tem=Length[Complement[#,temset]]&/@subset;
+			If[Max[tem]==0,flag=1;Break[]];
+			pos=PositionLargest[tem][[1]];
+			temset=Join[temset,subset[[pos]]]//Union;
+			AppendTo[result,{subset[[pos]],Thread@Rule[#,Table[Prime[20+i*2],{i,1,Length[#]}]]&[Complement[var,subset[[pos]]]]}];
+			k=k+1;
+		];
+		k=k+1
+	];
+	Return[result];
+];
+
+
 Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False};
-PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,bench,u,tsol,vrep},
+PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,bench,u,tsol,vrep,cover},
 subset=Subsets[topsector]//ReverseSortBy[#,Length]&//DeleteCases[#,{}]&;
 zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];(*all zero sectors*)
 subset=DeleteCases[subset,_?(MemberQ[zerolist,Sector2Digits[#]]&)];(*remove all zero sectors*)
 Print["totally ",Length[subset]," sectors need to be analyzed!"];
 
-(*subset={{1,3,4,5,6,7,8}};*)
+(*subset={{1,2,3,4,5,6,7}};*)
 Do[(*analyze sector by sector*)
 	If[OptionValue[deBug],Print["subset: ",subset[[i]]]];
 	singular={};
@@ -964,7 +1000,7 @@ Do[(*analyze sector by sector*)
 		(*now we consider sending all the isps to infinity plane which corresponds to the second Landau singularity*)
 		xl=Cases[{intset,hintset},Subscript[x,_],Infinity]//DeleteDuplicates;
 		If[OptionValue[deBug],If[brep[[j,1]]==={Subscript[x, 9],Subscript[x, 8],Subscript[x, 7],Subscript[x, 5],Subscript[x, 2]},Print["subset: ",subset[[i]]];Print["intset,hintset: ",{intset,hintset}]]];
-		If[Length[xl]>1,(*Length[xl]=1 case has been include before*)
+		If[Length[xl]>0,(*Length[xl]=1 case has been include before*)
 			tem=Trans2Inf[intset,hintset,xl];
 			intset=tem[[1]];
 			hintset=tem[[2]];
@@ -980,51 +1016,63 @@ Do[(*analyze sector by sector*)
 		AppendTo[singular,{sol//DeleteDuplicates,LVlocal//DeleteDuplicates,sqlocal//DeleteDuplicates,brep[[j,1]]}]
 	,{j,1,Length[brep]}];
 	tem=singular[[All,2]];
-	(*now we try to remove all spurious letters, we identify them by two steps, the first step will rule out some and the second step rule all of them out in principle*)
-	If[Length[tem]>1,
-		tem3=Reap[Do[
-			var=Variables[tem[[k]]];
-			groebner=GroebnerBasis[tem[[k]],var];(*calculate the Groebner basis from one representation*)
-			tem2=Delete[tem,k];
-			tem1=Table[Position[(PolynomialReduce[#,groebner,var]&/@tem2[[l]])[[All,2]],_?(#=!=0&),1]//DeleteCases[#,{0}]&,{l,1,Length[tem2]}];(*Find those polynomials that can not be reduced by the groebner basis calculated before*)
-			Sow[Join[{tem[[k]]},Table[Delete[tem2[[l]],tem1[[l]]],{l,1,Length[tem2]}]]//Flatten]
-			,{k,1,Length[tem]}];
-		][[2]];
-		If[tem3=!={},tem3=tem3[[1]]];
-		tem3=Intersection[Sequence@@tem3],
-		tem3=tem[[1]]
-	];
-	tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
-	tem1=(FactorList[#][[All,1]]&/@tem3)//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates;
-	tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
-	(*in the last step, we check again the letters which can be spurious by the dimension calculation*)
-	tem3=Complement[tem1,tem2];
-	(*Print["subset: ",subset[[i]]];*)
-	(*If[subset[[i]]==={1,2,3,4,5,6,8},Print[" tem3: ",tem3];Print["cutr: ",cutr]];*)
-	Do[
-		flag=0;
-		pos=Position[singular[[All,2]],_?(MemberQ[#,tem3[[k]]]&),1];
-		brepr=(Delete[brep,pos]);
-		var=Variables[tem3[[k]]];
-		pow=Exponent[tem3[[k]],#]&/@var;
-		pos=FirstPosition[pow,1];
-		If[pos===Missing["NotFound"],
-			sol=FindInstance[Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]],var,Rationals,2];(*find two numeric solutions to check*)
-			If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",i];sol=FindInstance[{tem3[[k]]==0},var]],
-			tsol=Solve[tem3[[k]]==0,var[[pos]]][[1]];
-			sol=Table[vrep=Thread@Rule[Delete[var,pos],Table[Prime[2024+l*m],{m,1,Length[var]-1}]];Join[Thread@Rule[var[[pos]],var[[pos]]/.tsol/.vrep],vrep],{l,1,2}]//DeleteDuplicates
+	If[!OptionValue[SelectQ],
+		(*now we try to remove all spurious letters in a more rigorous way, we identify them by two steps, the first step will rule out some and the second step rule all of them out in principle*)
+		If[Length[tem]>1,
+			tem3=Reap[Do[
+				tem2=Delete[tem,k];
+				var=Variables/@(tem[[k]]);
+				cover=FindCover[var];(*find a cover of variables set. We will only take some subset of all variables as symbols and all others will be set to some numeric values*)
+				(*when there are too many variables, the calculation of Groebner basis is difficult, here we adopt a semi-numerical method to speed up the calculation*)
+				tem1={};
+				Do[
+					groebner=GroebnerBasis[tem[[k]]/.cover[[j,2]],cover[[j,1]],Modulus->Prime[2024]];(*calculate the Groebner basis from one representation*)
+					tem1=Append[tem1,Table[Position[(PolynomialReduce[#/.cover[[j,2]],groebner,cover[[j,1]],Modulus->Prime[2024]]&/@tem2[[l]])[[All,2]],_?(#=!=0&),1]//DeleteCases[#,{0}]&,{l,1,Length[tem2]}]];(*Find those polynomials that can not be reduced by the groebner basis calculated before*)
+				,{j,1,Length[cover]}];
+				Sow[Join[{tem[[k]]},Table[Delete[tem2[[l]],tem1[[All,l]]//Flatten[#,1]&//DeleteDuplicates],{l,1,Length[tem2]}]]//Flatten]
+				,{k,1,Length[tem]}];
+			][[2]];
+			If[tem3=!={},tem3=tem3[[1]]];
+			tem3=Intersection[Sequence@@tem3],
+			tem3=tem[[1]]
 		];
+		tem1=(FactorList[#][[All,1]]&/@tem3)//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates;
+		(*in the last step, we check again the letters which can be spurious by the dimension calculation*)
+		tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
+		tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
+		tem3=Complement[tem1,tem2];
+		(*Print["subset: ",subset[[i]]];*)
+		(*If[subset[[i]]==={1,2,3,4,5,6,8},Print[" tem3: ",tem3];Print["cutr: ",cutr]];*)
 		Do[
-			u=(((((brepr[[l,2,1]])//Gram2Poly[#,krep]&)/.cutr//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&)));
-			xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
-			If[xl==={},Continue[]];
-			u=Times@@Power@@@u;
-			bench=GetDimension[u,xl];
-			(*If[subset[[i]]==={1,3,4,5,6,7,8},Print["brep: ",brepr[[l,2,1]]," cut: ",cut," u: ",u,"sol: ",sol," tem3[[k]]: ",tem3[[k]]]];*)
-			If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench,flag=1;Break[]]
-		,{l,1,Length[brepr]}];
-		If[flag==1,tem1=Complement[tem1,{tem3[[k]]}]]
-	,{k,1,Length[tem3]}];
+			flag=0;
+			pos=Position[singular[[All,2]],_?(MemberQ[#,tem3[[k]]]&),1];
+			brepr=(Delete[brep,pos]);
+			var=Variables[tem3[[k]]];
+			pow=Exponent[tem3[[k]],#]&/@var;
+			pos=FirstPosition[pow,1];
+			If[pos===Missing["NotFound"],
+				sol=FindInstance[Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]],var,Rationals,2];(*find two numeric solutions to check*)
+				If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",i];sol=FindInstance[{tem3[[k]]==0},var]],
+				tsol=Solve[tem3[[k]]==0,var[[pos]]][[1]];
+				sol=Table[vrep=Thread@Rule[Delete[var,pos],Table[Prime[2024+l*m],{m,1,Length[var]-1}]];Join[Thread@Rule[var[[pos]],var[[pos]]/.tsol/.vrep],vrep],{l,1,2}]//DeleteDuplicates
+			];
+			(*Print["dimension calculation"];(*//////////////////////////////////*)*)
+			Do[
+				u=(((((brepr[[l,2,1]])//Gram2Poly[#,krep]&)/.cutr//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&)));
+				xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
+				If[xl==={},Continue[]];
+				u=Times@@Power@@@u;
+				bench=GetDimension[u,xl];
+				(*If[subset[[i]]==={1,3,4,5,6,7,8},Print["brep: ",brepr[[l,2,1]]," cut: ",cut," u: ",u,"sol: ",sol," tem3[[k]]: ",tem3[[k]]]];*)
+				If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench,flag=1;Break[]]
+			,{l,1,Length[brepr]}];
+			(*Print["dimension calculation finished!"];(*//////////////////////////////////*)*)
+			If[flag==1,tem1=Complement[tem1,{tem3[[k]]}]]
+		,{k,1,Length[tem3]}],
+		tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
+		tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
+		tem1=If[tem=!={},Union[Sequence@@(tem)],{}](*our old way to remove spurious letters which is experimental*)
+	];
 	tsingular=AppendTo[tsingular,{singular[[All,{1,2,3,4}]],tem2,tem1,singular[[All,3]]//Flatten//DeleteDuplicates,subset[[i]]}]
 ,{i,1,Length[subset]}];
 Return[tsingular];
