@@ -689,7 +689,7 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 		If[OptionValue[deBug],Print["lv: ",lv," intset:",intset]];
 		AppendTo[sq,1];(*this corresponds to the case 1/x, that is one single pole of sol[[i]], it will multiply a factor from coefficients*)
 		sol1=sol;
-		AppendTo[sol1,{xl[[1]]->Infinity}](*in this case Infinity pole is present, not a branch cut*),
+		(*AppendTo[sol1,{xl[[1]]->Infinity,xl[[1]]->0}](*in this case Infinity pole is present, not a branch cut*)*),
 		
 		(*when there are square roots in the denominator*)
 		(*here we only concern square roots in dlog, so we won't consider the combinations of dlog any more since this won't give us new square root*)
@@ -726,7 +726,7 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 					Continue[]
 				]
 			,{i,1,Length[sol]}];			
-			AppendTo[sol1,{xl[[1]]->Infinity}](*in this case Infinity pole is present, not a branch cut*)
+			(*AppendTo[sol1,{xl[[1]]->Infinity,xl[[1]]->0}](*in this case Infinity pole is present, not a branch cut*)*)
 			,
 			If[p==1&&Length[sol]!=0,(*when there is a linear expression in the square root, Sqrt[ac-b]/(z-c)/Sqrt[az-b] is still a dlog*)
 			tem2={};
