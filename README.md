@@ -1,5 +1,5 @@
 # Baikovletter
-compute symbol letters for multi-loop planar MPL Feynman integral families
+compute symbol letters for multi-loop planar or non-planar MPL Feynman integral families
 
 ## contents
 

@@ -75,6 +75,7 @@ ExtractPoleInfo::usage="ExtractPoleInfo[exp,n] extracts the information of pole 
 CompatiblePoleQ::usage="CompatiblePoleQ[p1,p2] checks whether two poles p1 and p2 are compatible.";
 MaxPole::usage="MaxPole[p1,p2] compares two poles. If they don't belong to each other then it will return 0. If p1 contains p2, it will return 1 and otherwise it will return 2.";
 RemoveSPole::usage="RemoveSPole[poles] removes those poles that is already contained in other poles.";
+RemoveSPoleBeta::usage="Enhanced version of RemoveSPole.";
 CompatiblePoleGraph::usage="CompatiblePoleGraph[poles] constructs a graph for compatible poles and find all cliques in this graph. It will return {graph,cliques}";
 MergePoles::usage="MergePoles[poleslist] merges a list of compatible poles, poleslist.";
 
@@ -1181,6 +1182,23 @@ RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,l1=1,l2=2},
 ];
 
 
+(*enhanced version of RemoveSPole*)
+RemoveSPoleBeta[poles_]:=Module[{tem,tem1,den},
+	tem=poles;
+	(*now if the isp part of poles do not involve infinity, we directly substitute its values*)
+	tem1=Reap[
+		Do[
+			If[!FreeQ[tem[[i]],Infinity],Sow[tem[[i]]];Continue[]];
+			den=Denominator[Values[tem[[i,2]]]]//.tem[[i,2]]//Factor;
+			If[!FreeQ[den,0],Sow[tem[[i]]];Continue[]];(*avoid the situation where some variable becomes infinity after substituting values*)
+			Sow[{tem[[i,1]],Thread@Rule[Keys[tem[[i,2]]],Values[tem[[i,2]]]//.tem[[i,2]]//Factor]}]
+		,{i,1,Length[tem]}];
+	][[2]];
+	If[tem1=!={},tem1=RemoveSPole[tem1[[1]]]];
+	Return[tem1];
+];
+
+
 Options[CompatiblePoleGraph]={deBug->False,OutputLevel->2};
 CompatiblePoleGraph[poles_,OptionsPattern[]]:=Module[{remain,graph,tem},
 	remain=poles;
@@ -1203,7 +1221,7 @@ CompatiblePoleGraph[poles_,OptionsPattern[]]:=Module[{remain,graph,tem},
 ];
 
 
-Options[ExtractPoleInfo]={deBug->False,OutputLevel->1,Simp->True};
+Options[ExtractPoleInfo]={deBug->False,OutputLevel->1,Simp->True,Enhanced->False};
 ExtractPoleInfo[exp_,n_,OptionsPattern[]]:=Module[{tem,tem1,xl,isp={},result={},poles},
 result=Reap[Do[
 	tem=exp[[i]];(*for every sector*)
@@ -1219,6 +1237,7 @@ If[OptionValue[OutputLevel]==1,
 Print["original total ",Length[tem1]," poles"];
 If[!OptionValue[Simp],Return[tem1]];
 poles=RemoveSPole[tem1];(*remove poles that are already contained in other poles*)
+If[OptionValue[Enhanced],poles=RemoveSPoleBeta[poles]];(*in enhanced version, we further remove some poles which can be identified to each other by substitute the values of the variables. For example, {x1->s-x2,x2->s} is equivalent to {x1->0,x2->s}*)
 (*tem=CompatiblePoleMerge[poles];(*merge compatible poles*)
 poles=RemoveSPole[tem];*)
 Print["final total ",Length[poles]," poles"];
