@@ -1064,6 +1064,7 @@ Do[(*analyze sector by sector*)
 				If[xl==={},Continue[]];
 				u=Times@@Power@@@u;
 				bench=GetDimension[u,xl];
+				If[bench===$Failed,Continue[]];(*overtime, we will pass this case*)
 				(*If[subset[[i]]==={1,3,4,5,6,7,8},Print["brep: ",brepr[[l,2,1]]," cut: ",cut," u: ",u,"sol: ",sol," tem3[[k]]: ",tem3[[k]]]];*)
 				If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench,flag=1;Break[]]
 			,{l,1,Length[brepr]}];
@@ -1491,7 +1492,7 @@ ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,fac,rep,re
 			(*when projecting to infinity plane, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
 			,
 			pos=Position[pole[[k]],{__},1];
-			If[pos==={},rep=pole[[k]];rep1={},rep=pole[[k]][[pos[[1,1]]]];rep1=Delete[pole[[k]],pos[[1,1]]]];
+			If[pos==={},rep={};rep1=pole[[k]],rep=Take[pole[[k]],pos[[1,1]]]//Flatten;rep1=Drop[pole[[k]],pos[[1,1]]]];
 		];
 		(*tem=SpecialSimplify[{1,Times@@tem},AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];*)
 		ntem=tem;
