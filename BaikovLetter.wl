@@ -1724,7 +1724,7 @@ SelectAlgLetter[alg_,rl_,OptionsPattern[]]:=Module[{tem,int,select={}},
 Do[
 	tem=FactorList[(Numerator[#[[1]]]*Denominator[#[[1]]]&[alg[[i]]])//Expand][[All,1]]//DeleteCases[#,_?NumericQ]&;
 	int=RIntersection[tem,rl];
-	If[OptionValue[deBug]==True,Print["int: ",int]];
+	If[OptionValue[deBug]==True,Print["int: ",int];Print["tem: ",tem]];
 	If[Complement[tem,int[[1]]]=!={},Continue[],AppendTo[select,alg[[i]]]];
 ,{i,1,Length[alg]}];
 Return[select];

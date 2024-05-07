@@ -112,7 +112,7 @@ Begin["`Private`"]
 Options[GetDimension] = {Method -> "Singular", deBug -> False, fileDir
      -> $SingularFilePath, fileName 
     -> "gen_dimension.sing", SingCommand -> $SingularPath,
-     Time -> 300}; 
+     Time -> 600}; 
 
 GetDimension[uorom_, z_, OptionsPattern[]] :=
     Module[{file, stream, pl, var, rep, zl, den, flag},
