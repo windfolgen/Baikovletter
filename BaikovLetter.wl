@@ -446,7 +446,7 @@ If[AllTrue[fl[[All,2]],EvenQ],Return[True],Return[False]];
 
 PerfectSquareSplit[expr_]:=Module[{exp,list,sl={},nsl={}},
 exp=expr//Factor;
-If[Head[exp]===Power,If[MatchQ[exp,Power[_,_?EvenQ]],Return[{{exp/.{Power[z_,n_]:>z}},{}}],Message[PerfectSquareSplit::warning,exp];Return[{{exp/.{Power[z_,n_]:>z}},{exp/.{Power[z_,n_]:>z}}}]]];
+If[Head[exp]===Power,If[MatchQ[exp,Power[_,_?EvenQ]],Return[{{exp/.{Power[z_,n_]:>z}},{}}],Return[{{exp/.{Power[z_,n_]:>Power[z,Quotient[n,2]]}},{exp/.{Power[z_,n_]:>z}}}]]];
 If[Head[exp]===Times,list=List@@exp,Return[{{},{exp}}]];
 Do[
 	If[MatchQ[list[[i]],Power[_,_?EvenQ]],AppendTo[sl,list[[i]]/.{Power[z_,n_]:>z}],AppendTo[nsl,list[[i]]]]

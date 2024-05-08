@@ -30,7 +30,7 @@ $SingularPath::usage="Path for Singular excutable file.";
 (*dimension calculation*)
 GetDimension::uerr="u should in the form p1^a1...pn^an.`1`";
 GetDimension::oerr="Omega should be a matrix.";
-GetDimension::time="Computation not completed within given time. You can adjust the Option of Time to a larger value. Default value is 300s.";
+GetDimension::time="Computation not completed within given time. You can adjust the Option of Time to a larger value. Default value is 600s.";
 GetDimension::usage="GetDimension[u_or_Om,z] calculates the dimension of a system from the u function or Omega matrix with respect to z. There are two method. One is using Singular to calculate the proper critical points from u, in which case z is a list of variables. Another is using Omega from intersection calculation in which case z is the last variable when performing intersection number calculation in some order.";
 
 SearchDimension::usage="SearchDimension[list,zl,replist,Eps,sw:0] searches the dimension for a given integral family u, list is dlog u for all variables zl, replist is the replacement rule for irrelevant kinematics variables. Eps is the precision constraint of the numerical value. sw controls whether solving the system by Solve or by NSolve. ";
