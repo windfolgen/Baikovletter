@@ -21,7 +21,10 @@ y::usage="the variable for Baikov representation";
 G::usage="The function for Feynman integrals";
 j::usage="The function for Feynman integrals in LiteRed";
 \[Epsilon]::usage="the parameter for dimentional regularization";
-Protect[x,y,G,j,\[Epsilon]];
+R::usage="Possible alias for square roots.";
+Rlist::usage="Possible list for square roots";
+Rlist={};
+Protect[x,y,G,j,\[Epsilon],R,Rlist];
 
 (*some global path*)
 $SingularFilePath::usage="Path for temporary files of Singular.";
