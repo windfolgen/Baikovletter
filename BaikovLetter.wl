@@ -484,9 +484,9 @@ TakeSquareRoot[exp_]:=Module[{list,a,s,id,pos},
 		Unprotect[R,Rlist];
 		AppendTo[Rlist,s];
 		id=Length[Rlist];
-		R/:R[id]*R[id]:=Rlist[[-1]];
-		R/:Power[R[id],n_/;(EvenQ[n])]:=Power[Rlist[[-1]],n/2];
-		R/:Power[R[id],n_/;(OddQ[n])]:=Power[Rlist[[-1]],Quotient[n,2]]*R[id];
+		R/:R[id]*R[id]=Rlist[[-1]];
+		R/:Power[R[id],n_/;(EvenQ[n])]=Power[Rlist[[-1]],n/2];
+		R/:Power[R[id],n_/;(OddQ[n])]=Power[Rlist[[-1]],Quotient[n,2]]*R[id];
 		Protect[R,Rlist];
 		,
 		id=Position[Rlist,s][[1,1]]

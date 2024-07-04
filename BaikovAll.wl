@@ -23,6 +23,7 @@ j::usage="The function for Feynman integrals in LiteRed";
 \[Epsilon]::usage="the parameter for dimentional regularization";
 R::usage="Possible alias for square roots.";
 Rlist::usage="Possible list for square roots";
+Unprotect[Rlist];
 Rlist={};
 Protect[x,y,G,j,\[Epsilon],R,Rlist];
 
@@ -466,7 +467,9 @@ PolySymCheck[p_, rule_] :=
     ]; 
 
 
-PolyOrder[mon1_, mon2_] :=
+Options[PolyOrder]={"order"->"normal"};
+
+PolyOrder[mon1_, mon2_,OptionsPattern[]] :=
     Module[{term, xl, m, n},
         term = mon1 / mon2 // Factor;
         If[term === 1,
@@ -479,14 +482,16 @@ PolyOrder[mon1_, mon2_] :=
             ] // DeleteDuplicates // Sort;
         n = Sum[Power[2, xl[[i]] - 1], {i, 1, Length[xl]}];
         If[m > n,
-            Return[mon2]
+            If[OptionValue["order"]==="normal",Return[mon2],Return[mon1]]
             ,
-            Return[mon1]
+            If[OptionValue["order"]==="normal",Return[mon1],Return[mon2]]
         ];
         
     ]; 
 
-PolyEqual[mono_, sym_] :=
+Options[PolyEqual]={"order"->"normal"};
+
+PolyEqual[mono_, sym_,OptionsPattern[]] :=
     Module[{term = {}, max, tem},
         If[Head[mono] === Plus,
             If[FreeQ[mono, x],
@@ -499,18 +504,18 @@ PolyEqual[mono_, sym_] :=
         term = Prepend[Table[mono /. sym[[i]], {i, 1, Length[sym]}], 
             mono];
         max = term[[1]];
-        Do[max = PolyOrder[max, term[[i]]], {i, 2, Length[term]}];
+        Do[max = PolyOrder[max, term[[i]],"order"->OptionValue["order"]], {i, 2, Length[term]}];
         Return[max];
         
     ]; 
 
-Options[PolyFold] = {deBug -> False}; 
+Options[PolyFold] = {deBug -> False, "order"->"normal"}; 
 
 PolyFold[poly_, sym_, OptionsPattern[]] :=
     Module[{var, pl},
         var = Variables[poly] // DeleteCases[#, _?(FreeQ[#, x]&)]&;
         pl = MonomialList[poly, var];
-        pl = PolyEqual[#, sym]& /@ pl;
+        pl = PolyEqual[#, sym,"order"->OptionValue["order"]]& /@ pl;
         If[OptionValue[deBug],
             Echo[pl, "poly list:"]
         ];
