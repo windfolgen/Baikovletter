@@ -97,7 +97,8 @@ AllSectorBaikovMat::usage="AllSectorBaikovMat[list,rep] generate all Baikov repr
 
 AllSectorBaikovMatC::usage="AllSectorBaikovMatC[resultmat,var,krep] continues the calculation of AllSectorBaikovMat[]. resultmat is the output of AllSectorBaikovMat[]. var is the list of all Baikov variables. krep is the replacement rule of scalar products including loop momenta. This is designed for cases where we need to continue the recursive derivation of resultmat.";
 
-GetBaikovMatRep::usage="GetBaikovMatRep[result,var,n] gets the Baikov representation for given variables var. n is the number of Baikov variables. For example, var={1,2,3}. Option \"ExcVar\" gives the variables that are not considered. It can be {9,10} for example.";
+ExtractLoopOrder::usage="ExtractLoopOrder[krep] extracts the number of loops involved from the replacement rule krep.";
+GetBaikovMatRep::usage="GetBaikovMatRep[result,var,n] gets the Baikov representation for given variables var. n is the number of Baikov variables. For example, var={1,2,3}. Option \"ExcVar\" gives the variables that must not be integrated out, that is, they will keep in the representation. It can be {9,10} for example. Option \"looporder\" is the loop number of the integral family, e.g. for two loop family it is 2.";
 GetBaikovMatRep::zero="This is a zero sector.";
 GetBaikovMatRep::err="All variables have been integrated out.";
 
@@ -130,6 +131,7 @@ GetDimension[uorom_, z_, OptionsPattern[]] :=
             Message[GetDimension::uerr,uorom];
             Return[$Failed]
         ];
+        If[(uorom/.{Power[0,_]->0})===0,Return[$Failed]];(*cases uorom contains Power[0,_], this means there is a singularity in the representation*)
         pl = (D[Log[uorom], #]& /@ z) // Together // Numerator;
         If[OptionValue[deBug],
             Echo[pl, "pl:"]
@@ -142,14 +144,14 @@ GetDimension[uorom_, z_, OptionsPattern[]] :=
         rep = Thread @ Rule[var, Table[Prime[3 i + 1], {i, 1, Length[
             var]}]];
         pl = (pl /. rep /. {Subscript[a_, b_] :> ToExpression[ToString[
-            a] <> ToString[b]]}) // Simplify;
+            a] <> ToString[b]]}) // Factor;
         If[Head[uorom] === Times,
             den = uorom // Cases[#, Power[y_, _] :> y, {1}]&
             ,
             den = uorom // Cases[#, Power[y_, _] :> y, {0}]&
         ];
         den = Times @@ ((den /. rep /. {Subscript[a_, b_] :> ToExpression[
-            ToString[a] <> ToString[b]]}) // Simplify);
+            ToString[a] <> ToString[b]]}) // Factor);
         zl = Prepend[z /. {Subscript[a_, b_] :> ToString[a] <> ToString[
             b]}, "x0"];
         file = OptionValue[fileDir] <> OptionValue[fileName];
@@ -1267,7 +1269,16 @@ AllSectorBaikovMatC[resultmat_,var_,rep_, OptionsPattern[]] :=
             
          ]; 
 
-Options[GetBaikovMatRep] = {"ExcVar" -> {}, "ForceAdd" -> 0, deBug-> False}; 
+ExtractLoopOrder[rep_]:=Module[{list,listk,pos,ext,loop},
+	list=DeleteCases[rep,_?(FreeQ[#,x]&)];
+	listk=Complement[rep,list];
+	list=Keys[list]/.{SProd[a_,b_]:>{a,b},CenterDot[a_,b_]:>{a,b}}//Flatten//DeleteDuplicates;
+	listk=Keys[listk]/.{SProd[a_,b_]:>{a,b},CenterDot[a_,b_]:>{a,b}}//Flatten//DeleteDuplicates;
+	Return[Length[Complement[list,listk]]];
+];
+
+
+Options[GetBaikovMatRep] = {"ExcVar" -> {}, "looporder"-> 2, "ForceAdd" -> 0, deBug-> False}; 
 
 GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
     Module[{intv, l, k = 1, tem, pos, temp, res = {},flag},
@@ -1293,7 +1304,19 @@ GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
             temp = tem[[All, 1]];
             Do[
                 If[Length[Intersection[temp[[j]], intv]] > l - k,
-                    AppendTo[res, tem[[j]]];
+                    If[res==={},(*this sector aims to find all representations that are independent*)
+                        AppendTo[res, tem[[j]]],
+                        If[flag!=0,
+                            AppendTo[res, tem[[j]]],
+	                        Do[
+	                            If[OptionValue[deBug],Print["res: ",res[[All,1]]]];
+	                            If[ContainsAll[res[[c,1]],temp[[j]]],
+	                                Break[],
+	                                AppendTo[res, tem[[j]]]
+	                            ]
+	                        ,{c,1,Length[res]}]
+	                    ]
+                    ];
                     If[tem[[j, 2, 2]] === 0,
                         Message[GetBaikovMatRep::zero];
                         Break[]
@@ -1303,14 +1326,16 @@ GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
                 {j, 1, Length[temp]}
             ];
             If[res =!= {},
-                If[flag > 0, flag = flag - 1, Break[]]
+                If[flag > 0, 
+                    flag = flag - 1, 
+                    If[Length[res]<OptionValue["looporder"],k=k+1;Continue[],Break[]]
+                ]
             ];
             If[OptionValue[deBug],Print["additional isp needed! ", k]];
-            k = k + 1;
-            
+            k = k + 1; 
         ];
         If[res == {},
-            If[OptionValue[deBug],Print["Only the original representation may be its representation!"]];
+            If[OptionValue[deBug],Print["Only the original representation can be its representation!"]];
             Return[result[[1]]]
         ];
         Return[res];

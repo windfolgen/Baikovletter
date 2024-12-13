@@ -38,17 +38,23 @@ Digits2Sector::usage="Digits2Sector[digits] transforms a digital number to a sec
 PerfectSquareSplit::usage="PerfectSquareSplit[exp] split the perfect square in an expression exp. For internal use only.";
 PerfectSquareSplit::warning="Power odd appear under the square root: `1`.";
 
+PolyDim::usage="PolyDim[poly] returns the mass dimension of a homogeneous polynomial.";
+RemoveCoeff::usage="Remove the constant numeric factor from expression."
+TakeSquareRoot::usage="TakeSquareRoot[exp] take the square roots of an expression.";
+EnhancedFactor::usage="EnhancedFactor[list,z] factor the expression with respect to z.";
+
 ResolveSingleVariable::usage="ResolveSingleVariable[intset,hintset,z] resolves singularities of z from the integer power set: intset and half-integer power set: hintset.";
 ResolveSingleVariable::warning="Odd power under square: `1` !";
 ResolveSingleVariable::err="In ResolveSingleVariable[intset,hintset,z], intset and hintset can't both be {}";
-ResolveSingleVariable::elliptic="Elliptic case encountered!";
-ResolveSingleVariable::additional="This construction may be viable by proper variable transformation but we won't include it: {poly, poly list under square root} `1`.";
+ResolveSingleVariable::elliptic="Elliptic case encountered! `1`";
+ResolveSingleVariable::additional="There may be additional singularities: {poly, poly list under square root} `1`.";
 
 ResolveSingularities::usage="ResolveSingularities[intset,hintset] resolves singularities for all the variables in intset and hintset. It is the multivariate version of ResolveSingleVariable[].";
 ResolveSingularities::err="There is something wrong with the arguments. They are all irrelevant to Baikov variables.";
 ResolveSingularities::warning="In this case it is equivalent to integrating this variable out, so we won't consider its pole here but will include relevant Landau varieties. `1`.";
 ResolveSingularities::oddpower="There is an odd power higher than 1 of variable under square root or it's a linear expression but with no other poles in the denominator! The infinity is a branch cut. Its expression is `1` and the input is `2`.";
-ResolveSingularities::elliptic="Elliptic case encountered!";
+ResolveSingularities::elliptic="Elliptic or hyperelliptic case encountered! `1`";
+ResolveSingularities::additional="There may be additional singularities: {poly, poly list under square root} `1`.";
 
 Trans2Inf::usage="Trans2Inf[intset,hintset,xl] transforms the polynomial to infinity plane which corresponds to second Landau singularities.";
 
@@ -62,6 +68,9 @@ ExistRelationQ::usage="ExistRelationQ[poly,sqpolylist] detects whether poly has 
 FindCover::usage="FindCover[list] find a cover of the set of all variables present from a set of sets of these variables.";
 
 
+RFindInstance::usage="Refined version of FindInstance[]. Same usage as FindInstance[poly,var,domain,n] except that the first argument should be a polynomial.";
+
+
 PolesAnalyze::usage="PolesAnalyze[result,topsector,krep,n] gives the possible poles, their paths and leading singularities related. topsector is specified by a number list like {1,2,3,4} where 1-st, 2-nd, 3-rd and 4-th propagators are present in this sector. n is the total number of Baikov variables in a family. Actually, this serves as a limited case of dlog construction. The output will be a list of forms like {{{pole,poly,path},...},polylist1,polylist2,sector}. poles are classified by their sectors.";
 PolesAnalyze::misp = "We need consider at least next-to-next-to-maximal cut for this sector: `1` and only `2` of the propagators can be set to 0.";
 
@@ -70,9 +79,11 @@ RIntersection::usage="RIntersection[list1,list2] calculates the intersection of 
 AllRuleQ::usage="AllRuleQ[list] returns True if all elements in the list are rules.";
 
 
+ApplyPoleToVar::usage="ApplyPoleToVar[poles,var] applies poles to a list of Baikov variables var.";
 ExtractPoleInfo::usage="ExtractPoleInfo[exp,n] extracts the information of pole from the output of PolesAnalyze[] function. n is the total number of Baikov variables in an integral family. There is an option OutputLevel, it is set to 1 by default. When it is 2, the output will include some second type of poles.";
 
 CompatiblePoleQ::usage="CompatiblePoleQ[p1,p2] checks whether two poles p1 and p2 are compatible.";
+DecendentQ::usage="DecendentQ[basis,pole] checks whether a pole can be generated from the basis.";
 MaxPole::usage="MaxPole[p1,p2] compares two poles. If they don't belong to each other then it will return 0. If p1 contains p2, it will return 1 and otherwise it will return 2.";
 RemoveSPole::usage="RemoveSPole[poles] removes those poles that is already contained in other poles.";
 RemoveSPoleBeta::usage="Enhanced version of RemoveSPole.";
@@ -107,6 +118,7 @@ ApplyPoleToGram::usage="ApplyPoleToGram[pole,gram,krep] apply one pole to the gr
 
 PerfectSquareQ::usage="PerfectSquareQ[monomial] find whether monomial given is a perfect square of algebraic variables.";
 
+PolyMemberQ::usage="PolyMemberQ[polylist,poly] checks whether a polynomial poly is in the list of polylist. Note that they can differ by a numeric constant.";
 AdmissiblePoleQ::usage="AdmissiblePoleQ[glist,pole,permsq,krep] decides whether a pole can be substituted into glist. permsq is a list of polynomials the square root of which are leading singularities appearing in the construction of UT basis.";
 PathsDistance::usage="PathsDistance[p1,p2] calculate the minimum distance of two path list.";
 
@@ -121,6 +133,12 @@ GramPCQ::usage="GramPCQ[glist] finds whether two grams in glist are parent Gram 
 ApplyPolesToAlgLetter1::usage="ApplyPolesToAlgLetter1[poles,letters,reform,krep] apply all possible poles to the letters constructed. reform is the output of ReformRep[result]. This will give all first type letters. The output consists of three part: nletters (which is the normal letter), kletters (which consists of only pure kinematics grams) and sletters (which are not permissible because the distance between the selection rule we put on)";
 
 
+ApplyPolesToAlgLetter1::permsq="The option \"PermSq\" can not be empty!";
+
+
+ApplyPolesToAlgLetter2::permsq="The option \"PermSq\" can not be empty!";
+
+
 GetQuadMatrix::usage="GetQuadMatrix[exp] get the quadratic matrix from a one-loop baikov polynomial.";
 ApplyPoleToQM::usage="ApplyPoleToQM[poles,G,krep] apply two poles to one Q matrix. G is the Gram G[]. The ouput will be {{Log[...],G,{pole1,pole2}},...}.";
 ApplyPolesToAlgLetter2::usage="ApplyPolesToAlgLetter2[poles,gram,reform,krep] apply poles to one Gram to construct the second type of letter. When gram={}, reform will give all possible gram. The output will be in the form {{{Log[],Gram1,{pole1,pole2}},{Log[],Gram1,{pole3,pole4}},...},{{Log[],Gram2,{pole1,pole2}},{Log[],Gram2,{pole3,pole4}},...},...}";
@@ -131,6 +149,8 @@ AllAlgLettersPL::usage="The parallel version of AllAlgLetters[poles,algletter,re
 
 
 SameAlgLetterQ::usage="SameAlgLetterQ[a1,a2] determines whether a1 and a2 are two equivalent algebraic letters.";
+SameGramQ::usage="SameGramQ[g1,g2] decides whether two monomials of Grams equal to each other (or only differ by a minus sign, we take this as the same too).";
+SameAlgLetterGramQ::usage="Internal usage! SameAlgLetterGramQ[letter1,letter2] decides whether two algbraic letters with abstract expression of G equals to each other. letter1 and letter2 should be in the form {Log[a+Sqrt[b]/(a-Sqrt[b])],a^2-b,...}.";
 GetCoord::usage="GetCoord[exp] gives {sq,r} from an algebraic letter (b+Sqrt[sq])/(b-Sqrt[sq]). r= b^2-sq.";
 DeleteSameAlgLetter::usage="DeleteSameAlgLetter[alglist] delete the same algletter in a list.";
 
@@ -471,8 +491,67 @@ If[AnyTrue[tem,PerfectSquareQ],Throw[True],Throw[False]];
 RemoveCoeff[exp_]:=If[exp===0,0,Times@@Power@@@(FactorList[exp]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)];
 
 
-Options[ResolveSingleVariable]={deBug->False,LastVar->False,HigherPower->False,DLog->False,AdInfo->True,SelectQ->True};
-ResolveSingleVariable[iintset_,ihintset_,z_,OptionsPattern[]]:=Module[{intset,hintset,p,tem,tem1,tem2,coe,irintset={},rintset={},irhintset={},rhintset={},result={},sresult={},sol,hpintset={},dlog={},a1,b1},
+Options[TakeSquareRoot]={"test"->False};
+TakeSquareRoot[exp_,OptionsPattern[]]:=Module[{list,a,s,id,pos},
+	list=FactorList[exp];
+	a=Product[Power[list[[i,1]],Quotient[list[[i,2]],2]],{i,1,Length[list]}];
+	s=Product[Power[list[[i,1]],Mod[list[[i,2]],2]],{i,1,Length[list]}];
+	If[s=!=1,
+		If[!FreeQ[s,x],Return[0]];
+		If[OptionValue["test"],Return[1]];
+		If[!MemberQ[Rlist,s],
+		Unprotect[R,Rlist];
+		AppendTo[Rlist,s];
+		id=Length[Rlist];
+		R/:R[id]*R[id]=Rlist[[-1]];
+		R/:Power[R[id],n_/;(EvenQ[n])]=Power[Rlist[[-1]],n/2];
+		R/:Power[R[id],n_/;(OddQ[n])]=Power[Rlist[[-1]],Quotient[n,2]]*R[id];
+		Protect[R,Rlist];
+		,
+		id=Position[Rlist,s][[1,1]]
+		];
+		s=R[id];
+	];
+	Return[a*s];
+];
+
+
+EnhancedFactor[intset_,z_]:=Module[{tem,result,pow,sol,sq,rep,var,numrep},
+	(*Return[intset];*)
+	result=Reap[
+	Do[
+		If[FreeQ[intset[[i]],z],
+			Sow[intset[[i]]];Continue[],
+			pow=Exponent[intset[[i]],z];
+			If[pow==1||pow>2,
+				Sow[intset[[i]]];Continue[],
+				var=Variables[intset[[i]]]//DeleteCases[#,_?(!FreeQ[#,x]&)]&;
+				If[var=!={},(*we first use a set of numerical value to test which may avoid unnecessary calculation*)
+					numrep=Thread@Rule[var,RandomPrime[10000,Length[var]]];
+					sol=Solve[(intset[[i]]/.numrep)==0,z];
+					sq=Cases[sol,Power[_,1/2],Infinity]//DeleteDuplicates;
+					tem=TakeSquareRoot[#,"test"->True]&/@(sq/.{Power[a_,1/2]:>a});
+					If[MemberQ[tem,0],Sow[intset[[i]]];Continue[]];(*in this case, there are still Baikov variables under square roots, we don't consider it*)
+				];
+				sol=Solve[intset[[i]]==0,z];
+				sq=Cases[sol,Power[_,1/2],Infinity]//DeleteDuplicates;
+				If[sq==={},Sow[(Power@@@(FactorList[intset[[i]]]))//DeleteCases[#,_?NumericQ]&];Continue[]];
+				tem=TakeSquareRoot/@(sq/.{Power[a_,1/2]:>a});
+				If[MemberQ[tem,0],Sow[intset[[i]]];Continue[]];(*in this case, there are still Baikov variables under square roots, we don't consider it*)
+				rep=Thread@Rule[sq,tem];
+				tem=Times@@(z-(z/.(sol/.rep))//Factor//Numerator);
+				Sow[tem];
+				(*Do[Sow[tem[[j]]],{j,1,Length[tem]}];*)
+			]
+		]
+	,{i,1,Length[intset]}]
+	][[2]];
+	If[result=!={},Return[result[[1]]//Flatten],Return[result]];
+];
+
+
+Options[ResolveSingleVariable]={deBug->False,LastVar->False,HigherPower->False,DLog->False,AdInfo->True,SelectQ->True,"GeneralPinch"->True,"SpecialKinematics"->{}};
+ResolveSingleVariable[iintset_,ihintset_,z_,OptionsPattern[]]:=Module[{intset,hintset,p,tem,tem1,tem2,coe,irintset={},rintset={},irhintset={},rhintset={},result={},sresult={},sol,temsol,hpintset={},rintsetp,dlog={},a1,b1,i,j,k,l},
 intset=iintset;hintset=ihintset;
 If[intset==={}&&hintset==={},Message[ResolveSingleVariable::err];Return[$Failed]];
 
@@ -500,24 +579,39 @@ If[hintset=!={},
 (*irintset and irhintset will be polynomial free of variable z, they will be kept to the resolution of next variable*)
 If[OptionValue[deBug],Print["rintset,rhintset,irintset,irhintset: ",{rintset,rhintset,irintset,irhintset}]];
 
-(*we will include the 'intersection' from two polynomials under square root in elliptic case*)
-If[OptionValue[LastVar]&&!OptionValue[DLog],If[Length[rhintset]>1&&Exponent[Times@@rhintset,z]>2,Table[irhintset=Join[irhintset,{Resultant[rhintset[[i]],rhintset[[j]],z]//Factor}];,{i,1,Length[rhintset]},{j,i+1,Length[rhintset]}]]];
 
 (*resolve singularities relevant to square roots*)
 If[rhintset=!={},
 	tem=Times@@rhintset;(*expression under square root*)
 	tem1=Exponent[tem,z];
+	(*we will include the 'intersection' from two polynomials under square root in elliptic or quadratic case*)
+	If[OptionValue[LastVar]&&OptionValue["GeneralPinch"],
+		If[Length[rhintset]>1&&tem1>2,
+			Table[irintset=Join[irintset,{Resultant[rhintset[[i]],rhintset[[j]],z]//Factor}];,{i,1,Length[rhintset]},{j,i+1,Length[rhintset]}]];
+		If[tem1==2,
+			irintset=Join[irintset,{Discriminant[tem,z]//Factor}]
+		]
+	];
+	If[OptionValue[LastVar]&&OptionValue["SpecialKinematics"]=!={}&&Not@OptionValue["GeneralPinch"],(*in this case, we consider the degeneration of polynomials under special kinematics*)
+		Do[
+			If[Exponent[rhintset[[i]],z]>2,Continue[]];(*powers too high*)
+			tem2=Discriminant[rhintset[[i]]/.OptionValue["SpecialKinematics"],z]//Factor;
+			If[tem2===0,
+				Print["Special kinematics work. We will take pinch for ",Short[rhintset[[i]],40]];
+				irintset=Join[irintset,{Discriminant[rhintset[[i]],z]//Factor}]
+			]
+		,{i,1,Length[rhintset]}];
+	];
 	If[OddQ[tem1],(*if polynomial under square root is of odd power*)
 		If[tem1>1,
-			Message[ResolveSingleVariable::warning,tem1];(*polynomial under square root of odd power higher than 2*)
-			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic];Print["tem: ",tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
+			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic,tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
 			coe=0,(*we don't consider this case since it is hardly related to MPL*)
 			coe=Prime[2024](*when this is a linear polynomial it can be related to dlog like Sqrt[b*a-c]/(z-a)/Sqrt[b*z-c], but we need to keep in mind that Sqrt[b]/Sqrt[b*z-c] is not a dlog*)
 			(*here we use coe=Prime[2024] which is chosen randomly to distinguish it from the following case Sqrt[a]/Sqrt[az^2+bz+c] which is a dlog form*)
 		],
 		(*even power case*)
 		If[tem1>2,
-			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic];Print["tem: ",tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
+			If[OptionValue[LastVar],Message[ResolveSingularities::elliptic,tem]];(*when there is only one integration variable, it is elliptic or hyperelliptic*)
 			coe=0,
 			coe=Coefficient[tem,z,tem1](*in this case, there is a quadratic polynomial under square root*)
 		]
@@ -532,7 +626,7 @@ If[coe=!=0,
 		coe=1(*redefine coe to be 1*),
 		(*the following is the case Sqrt[a]/Sqrt[a*z^2+bz+c]*)
 		tem1=PerfectSquareSplit[coe];
-		If[OptionValue[SelectQ],
+		If[OptionValue[SelectQ], (*now this is turned off by default*)
 			tem1={{},tem1[[2]]};(*--------------------(^_^)--------------------*)
 			(*here we remove those terms from perfect square roots under square root which we believe to be spurious letters*)
 		];
@@ -542,43 +636,34 @@ If[coe=!=0,
 ];
 
 If[OptionValue[deBug],Print["coe: ",coe];Print["result: ",result]];
-(*If[coe=!=0&&coe=!=1,
-	tem1=PerfectSquareSplit[coe];
-	(*AppendTo[result,{{z->Infinity},Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}];*)
-	If[Length[rintset]>0,
-		tem=DeleteCases[rintset,_?(Exponent[#,z]>1&)];
-		Do[
-			sol=(Solve[tem[[k]]==0,z]//DeleteDuplicates);
-			AppendTo[result,{sol[[1]],Join[irintset,((FactorList[#][[All,1]]&/@(tem/.sol[[1]]//Factor//Numerator))//Flatten),tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]
-		,{k,1,Length[tem]}];
-	];
-];*)
 
 (*resolve singularities from rational part*)
+rintsetp=EnhancedFactor[rintset,z];(*Enhanced factor can factor some quadratic polynomials and abbreviate some square roots of kinematic variables*)
 p=Exponent[#,z]&/@rintset;(*power of rational polynomials w.r.t variable z*)
-sol=Table[If[p[[i]]<3,(Solve[rintset[[i]]==0,z]//DeleteDuplicates),Null],{i,1,Length[rintset]}];(*only solve linear polynomials and quadratic polynomials*)
+sol=Table[If[p[[i]]<3,(Solve[rintsetp[[i]]==0,z]//DeleteDuplicates),Null],{i,1,Length[rintsetp]}];(*only solve linear polynomials and quadratic polynomials*)
 tem2={};
 Do[
 	(*when there are polynomials with power of z higher than 2, we don't consider them since they may generate singularities with power other than 1/2*)
 	If[p[[i]]>2,AppendTo[hpintset,rintset[[i]]];Continue[]];
 	
+			
 	If[Length[sol[[i]]]==1,(*if this pole is a linear rational pole, we will keep this pole*)
 		If[rhintset==={},
 			(*if there are no square roots*)
 			(*take pole at this solution*)
 			If[!OptionValue[DLog],
-				AppendTo[result,{sol[[i,1]],Join[irintset,(*{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)},*)(RemoveCoeff/@(NumeratorDenominator[(rintset/.sol[[i,1]]//Factor)]//Flatten))]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,irhintset}],
+				AppendTo[result,{sol[[i,1]],Join[irintset,(*{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)},*)(RemoveCoeff/@(NumeratorDenominator[(rintset/.sol[[i,1]]//Expand//Factor//DeleteCases[#,_?NumericQ]&)]//Flatten))]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,irhintset}],
 				(*dlog type construction*)
 				AppendTo[dlog,{Join[irintset,{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)}],irhintset}];(*a/(a*z-b) type dlog*)
-				Table[If[k!=i,AppendTo[dlog,{Join[irintset,{RemoveCoeff[Times@@NumeratorDenominator[rintset[[k]]/.sol[[i,1]]//Factor]]}],irhintset}]],{k,1,Length[rintset]}](*(bc-ad)/(az-b)/(cz-d) type dlog*)
+				Table[If[k!=i,AppendTo[dlog,{Join[irintset,{RemoveCoeff[Times@@NumeratorDenominator[rintset[[k]]/.sol[[i,1]]//Expand//Factor]]}],irhintset}]],{k,1,Length[rintset]}](*(bc-ad)/(az-b)/(cz-d) type dlog*)
 			]
 			,
 			(*if there are square roots*)
-			If[OptionValue[LastVar]&&Exponent[Times@@rhintset,z]>2,Continue[]];(*when it is the last variable and the power is higher than 2 in square root, then this is elliptic or hyperelliptic function*)
+			If[OptionValue[LastVar]&&Exponent[Times@@rhintset,z]>2,Message[ResolveSingularities::elliptic,{z,rhintset}];Continue[]];(*when it is the last variable and the power is higher than 2 in square root, then this is elliptic or hyperelliptic function*)
 			tem=Times@@@NumeratorDenominator[rhintset/.sol[[i,1]]//Factor];(*move denominator to numerator*)
 			(*when the polynomials under square root vanish, then this is a branch cut, not a pole*)
 			If[!FreeQ[tem,0],Continue[]];
-			If[OptionValue[SelectQ],
+			If[OptionValue[SelectQ],(*now this is turned off by default*)
 				tem=tem//DeleteCases[#,_?PerfectSquareQ]&;(*------------------(^_^)-------------------*)
 				(*remove perfect squares under square roots, they are conjectured to be spurious*)
 			];
@@ -592,19 +677,63 @@ Do[
 				AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]
 			]
 		],
-		(*---------------------------when there is an irreducible quadratic polynomial in the denominator----------------------*)
-		If[rhintset=!={}&&!ExistRelationQ[rintset[[i]],rhintset],If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{rintset[[i]],rhintset}];Print[Short[{rintset[[i]],rhintset},20]]];Continue[]];
-		tem=Discriminant[rintset[[i]],z]*coe//Factor;
-		If[tem===0,Continue[]];(*if tem is 0, this construction will stop here*)
-		tem1=PerfectSquareSplit[tem];
-		If[OptionValue[SelectQ],
-			tem1={{},tem1[[2]]};(*---------------------------(^_^)-------------------------------*)
-			(*here we remove those terms from perfect squares under square roots which we believe to be spurious letters*)
-		];
-		If[!OptionValue[DLog],
-			AppendTo[sresult,{{rintset[[i]]},Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]]//DeleteCases[#,_?NumericQ]&}],
-			(*a special kind of dlog, we slightly enlarge its possible realization.*)
-			AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]]//DeleteCases[#,_?NumericQ]&}]
+		If[!FreeQ[sol[[i]],Power[_,1/2]],(*if this quadratic polynomial cannot be factorized by EnhancedFactor*)
+			(*---------------------------when there is an irreducible quadratic polynomial in the denominator----------------------*)
+			If[rhintset=!={}&&!ExistRelationQ[rintset[[i]],rhintset],
+				If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{rintset[[i]],rhintset}]];Continue[]
+				(*(*try to find a pinch solution*)
+				temsol=Solve[{D[rintset[[i]],z]==0,Discriminant[rintset[[i]],z]==0},Cases[rintset[[i]],Subscript[x,_],Infinity]//DeleteDuplicates];
+				If[temsol==={}||Not@FreeQ[temsol,Power[_,1/2]],If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{rintset[[i]],rhintset}]];Continue[]];
+				temsol=Table[{Rule[z,z/.temsol[[k]]]},{k,1,Length[temsol]}];*)
+			];
+			tem=Discriminant[rintset[[i]],z]*coe//Factor;
+			If[tem===0,Continue[]];(*if tem is 0, this construction will stop here*)
+			tem1=PerfectSquareSplit[tem];
+			If[OptionValue[SelectQ],(*now this is turned off by default*)
+				tem1={{},tem1[[2]]};(*---------------------------(^_^)-------------------------------*)
+				(*here we remove those terms from perfect squares under square roots which we believe to be spurious letters*)
+			];
+			If[!OptionValue[DLog],
+				AppendTo[sresult,{{rintset[[i]]}(*Solve[D[rintset[[i]],z]==0,z][[1]]*),Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]]//DeleteCases[#,_?NumericQ]&}],
+				(*a special kind of dlog, we slightly enlarge its possible realization.*)
+				AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]]//DeleteCases[#,_?NumericQ]&}]
+			],
+			(*if it can be factorized by EnhancedFactor*)
+			Do[
+				If[rhintset==={},
+					(*if there are no square roots*)
+					(*take pole at this solution*)
+					tem=Times@@((List@@(rintsetp[[i]]))/.sol[[i,l]]//Factor//DeleteCases[#,_?NumericQ]&);(*this quadratic polynomial will be handled separately*)
+					tem1=Times@@(FactorList[tem][[All,1]]//DeleteCases[#,_?(FreeQ[#,R]&)]&);(*the genuine square root part*)
+					tem=tem/tem1;
+					If[!FreeQ[tem,R],Print["temR: ",tem]];
+					If[!OptionValue[DLog],
+						AppendTo[result,{sol[[i,l]],Join[irintset,(*{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)},*)(RemoveCoeff/@(NumeratorDenominator[Join[(Delete[rintsetp,i]/.sol[[i,l]]//Factor),{tem}]]//Flatten//DeleteCases[#,_?NumericQ]&))]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,{tem1^2}]}],
+						(*dlog type construction*)
+						AppendTo[dlog,{Join[irintset,{Times@@Power@@@(FactorList[Coefficient[rintset[[i]],z,p[[i]]]]//DeleteCases[#,_?(NumericQ[First[#]]&)]&)}],irhintset}];(*a/(a*z-b) type dlog*)
+						Table[If[k!=i,AppendTo[dlog,{Join[irintset,{RemoveCoeff[Times@@NumeratorDenominator[rintset[[k]]/.sol[[i,l]]//Factor]]}],irhintset}]],{k,1,Length[rintset]}](*(bc-ad)/(az-b)/(cz-d) type dlog*)
+					]
+					,
+					(*if there are square roots*)
+					If[OptionValue[LastVar]&&Exponent[Times@@rhintset,z]>2,Message[ResolveSingularities::elliptic,{z,rhintset}];Continue[]];(*when it is the last variable and the power is higher than 2 in square root, then this is elliptic or hyperelliptic function*)
+					tem=Times@@@NumeratorDenominator[rhintset/.sol[[i,l]]//Factor];(*move denominator to numerator*)
+					(*when the polynomials under square root vanish, then this is a branch cut, not a pole*)
+					If[!FreeQ[tem,0],Continue[]];
+					If[OptionValue[SelectQ],(*now this is turned off by default*)
+						tem=tem//DeleteCases[#,_?PerfectSquareQ]&;(*------------------(^_^)-------------------*)
+						(*remove perfect squares under square roots, they are conjectured to be spurious*)
+					];
+					tem1=PerfectSquareSplit[Times@@tem];
+					AppendTo[tem2,{i,Times@@@tem1}];(*for later construction*)
+					If[!OptionValue[DLog],
+						(*AppendTo[result,{sol[[i,1]],Join[irintset,tem1[[1]]]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]*)
+						AppendTo[result,{sol[[i,l]],Join[irintset,tem1[[1]](*,FactorList[Coefficient[rintset[[i]],z,p[[i]]]][[All,1]]//Flatten*),(Join[(((rintset(*//DeleteCases[#,_?(Exponent[#,z]>1&)]&*))/.sol[[i,l]]//Factor)//Numerator),{}])//Flatten]//DeleteCases[#,_?NumericQ]&//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&,{Discriminant[rintset[[i]],z]//Factor}]}],
+						(*dlog of type (Sqrt[ad^2+bd+c]/(z-d)/(Sqrt[az^2+bz+c]))*)
+						(*Note that when two polynomials are rational, we can always perform the variable transformation, so we can set some poly in rintset at this pole in the same time*)
+						AppendTo[dlog,{Join[irintset,tem1[[1]]//DeleteCases[#,_?NumericQ]&]//DeleteDuplicates,Join[irhintset,tem1[[2]]//DeleteCases[#,_?NumericQ]&]}]
+					]
+				]
+			,{l,1,Length[sol[[i]]]}]
 		]
 	]
 ,{i,1,Length[rintset]}];
@@ -642,15 +771,58 @@ If[!OptionValue[DLog],
 ];
 
 
-Options[ResolveSingularities]={deBug->False,SortQ->True,AdInfo->True,SelectQ->True};
-ResolveSingularities[iintset_,ihintset_,OptionsPattern[]]:=Module[{intset,hintset,xl,nl,lv={},sq={},sol={},tem,p,tem1,tem2,sol1={},ssol={},result,a1,b1},
-intset=iintset;hintset=ihintset;
+RemoveSquareRootsSol[sol_]:=Module[{keys,values,den,tem,temq,result},
+	result=Reap[
+		Do[
+			If[FreeQ[sol,R],Sow[sol[[i]]];Continue[]];(*we only want to remove those terms that involve R*)
+			keys=Keys[sol[[i]]];
+			values=Values[sol[[i]]];
+			If[!FreeQ[values,Infinity],Sow[sol[[i]]];Continue[]];(*do nothing if the pole will map variables to infinity plane*)
+			den=Quiet[Denominator[values]//.sol[[i]]//Factor];
+			If[!FreeQ[den,0],Sow[sol[[i]]];Continue[]];
+			tem=keys//.sol[[i]]//Factor;
+			temq={Plus@@tem,Times@@tem}//Factor;
+			If[FreeQ[temq,R],
+				Sow[sol[[i]](*Thread@Rule[keys,tem]*)],
+				Continue[]
+			]
+		,{i,1,Length[sol]}]
+	][[2]];
+	If[result=!={},Return[result[[1]]],Return[{}]];
+];
+
+
+(*ConjugatePairQ[p1_,p2_]:=Module[{tem,sq},
+	sq=Cases[p1,R[_],Infinity]//DeleteDuplicates;
+	If[sq==={},Return[True]];
+	If[Length[sq]>1,Return[False]];
+	tem={(p1/.{R[a_]:>-R[a]})-p2,(p1/.{R[a_]:>-R[a]})+p2}//Factor;
+	If[MemberQ[tem,0],Return[True],Return[False]];
+];
+RemoveSquareRootsPoly[list_]:=Module[{tem,mark={},m,l},
+	If[FreeQ[list,R],Return[list]];
+	tem=Reap[
+		Do[
+			If[FreeQ[list[[l]],R],Sow[list[[l]]];Continue[]];
+			If[MemberQ[mark,l],Continue[]];
+			Do[
+				If[ConjugatePairQ[list[[l]],list[[m]]],Sow[list[[l]]*list[[m]]//Expand];AppendTo[mark,m];Break[]]
+			,{m,l+1,Length[list]}]
+		,{l,1,Length[list]}]
+	][[2]];
+	If[tem==={},Return[{}],Return[tem[[1]]//DeleteDuplicates]];
+];*)
+
+
+Options[ResolveSingularities]={deBug->False,SortQ->True,AdInfo->True,SelectQ->False,RemoveSquareRoots->True,"GeneralPinch"->False,"SpecialKinematics"->{}};
+ResolveSingularities[iintset_,ihintset_,OptionsPattern[]]:=Module[{intset,hintset,xl,xla,nl,lv={},sq={},sol={},tem,p,tem1,tem2,sol1={},ssol={},result,a1,b1,i,j,k,supv},
+intset=iintset//SortBy[#,LeafCount]&;hintset=ihintset//SortBy[#,LeafCount]&;
 xl=Cases[{intset,hintset},Subscript[x,_],Infinity]//DeleteDuplicates;(*number of remaining ISPs*)
-If[xl==={},Message[ResolveSingularities::err];Return[$Failed]];
+If[xl==={},Message[ResolveSingularities::err];Return[{{},intset,hintset}]];
 
 (*sort the variable by their appearance in polynomials*)
 If[OptionValue[SortQ],
-	nl=Table[{Count[FreeQ[#,xl[[i]]]&/@Join[(*intset,*)hintset],False],(Exponent[#,xl[[i]]]&/@intset)//DeleteCases[#,0]&//Min,Count[FreeQ[#,xl[[i]]]&/@intset,True],xl[[i]]},{i,1,Length[xl]}]//SortBy[#,{First,#[[2]]&,#[[3]]&}]&;
+	nl=Table[{Count[FreeQ[#,xl[[i]]]&/@Join[(*intset,*)hintset],False],(Exponent[#,xl[[i]]]&/@intset)//DeleteCases[#,0]&//Min,Count[FreeQ[#,xl[[i]]]&/@intset,True],FirstPosition[intset,xl[[i]],Missing["NotFound"],Infinity][[1]],xl[[i]]},{i,1,Length[xl]}]//SortBy[#,{First,#[[2]]&,#[[3]]&,#[[4]]&}]&;
 	xl=nl[[All,-1]];
 	(*sort the variables by their appearing frequences*)
 	(*here we set the rule for the order. In principle, we should consider every order. First, we choose those that appear less in the square root with most priority. Then we choose those with less power outside the square root. At last, we choose those appear more outside the square root *)
@@ -659,17 +831,18 @@ If[OptionValue[deBug],Print["xl: ",xl]];
 
 (*we consider the single ISP case separately*)
 If[Length[xl]==1,(*if there is only one ISP remaining*)
-	Do[(*this will give all possible pole given by linear and quadratic equations*)
+	Do[(*this will give all possible poles given by linear and quadratic equations*)
 		If[Exponent[intset[[i]],xl[[1]]]<2,
 			(*linear pole*)
 			AppendTo[sol,Solve[intset[[i]]==0,xl][[1]]];
-			AppendTo[lv,Coefficient[intset[[i]],xl[[1]],1]]
+			AppendTo[lv,Coefficient[intset[[i]],xl[[1]],1]];
 			If[OptionValue[deBug],Print["lv: ",lv," intset:",intset[[i]]]],
-			(*quadratic pole*)
-			AppendTo[ssol,{intset[[i]]}];
+			(*quadratic pole or higher, for the quardratic polynomial, we just solve D[poly,x]==0, for higher polynomial, we keep its form*)
+			AppendTo[ssol,{intset[[i]]}(*If[Exponent[intset[[i]],xl[[1]]]==2,Solve[Equal[D[intset[[i]],xl[[1]]],0],xl][[1]],{intset[[i]]}]*)];
 			If[hintset=!={}&&!ExistRelationQ[intset[[i]],hintset],
-				If[OptionValue[AdInfo],Message[ResolveSingleVariable::additional,{intset[[i]],hintset}];Print[{intset[[i]],hintset}]],
+				If[OptionValue[AdInfo],Message[ResolveSingularities::additional,{intset[[i]],hintset}];Print[{intset[[i]],hintset}]],
 				If[OptionValue[SelectQ],
+					(*this option has been turned off in current version*)
 					tem=PerfectSquareSplit[Discriminant[intset[[i]],xl[[1]]]];
 					tem={{},tem[[2]]};(*---------------------(^_^)-------------------------*)
 					(*here we remove those terms which arise from the perfect squares under square roots which we conjecture to be spurious*)
@@ -685,7 +858,7 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 	,{i,1,Length[intset]}];
 	If[hintset==={},
 		(*if there are no square roots*)
-		lv=Join[lv,((*FactorList[#][[All,1]]&/@*)(Table[RemoveCoeff/@(NumeratorDenominator[intset/.sol[[i]]//Factor]//Flatten//DeleteDuplicates),{i,1,Length[sol]}]//Flatten))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates];
+		lv=Join[lv,((Table[RemoveCoeff/@(NumeratorDenominator[intset/.sol[[i]]//Factor]//Flatten//DeleteDuplicates),{i,1,Length[sol]}]//Flatten))//DeleteCases[#,_?NumericQ]&//DeleteDuplicates];
 		(*here, it need to stress that (a*b)/(z*(z+a)(z-b)) can not be a dlog, only two linear term can be combined to a dlog form a/(z(z-a)) or ((a-b)/((z-a)(z-b))). but familiar construction can work for multivariate case because we can perform a change of variables*)
 		If[OptionValue[deBug],Print["lv: ",lv," intset:",intset]];
 		AppendTo[sq,1];(*this corresponds to the case 1/x, that is one single pole of sol[[i]], it will multiply a factor from coefficients*)
@@ -696,10 +869,28 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 		(*here we only concern square roots in dlog, so we won't consider the combinations of dlog any more since this won't give us new square root*)
 		tem=Times@@hintset;
 		p=Exponent[tem,xl[[1]]];
-		If[p>2,
-			Message[ResolveSingularities::elliptic];Print["only one ISP! tem: ",tem];
-			If[Length[hintset]>1,Table[lv=Join[lv,{Resultant[hintset[[i]],hintset[[j]],xl[[1]]]//Factor}],{i,1,Length[hintset]},{j,i+1,Length[hintset]}]]
-		];(*elliptic case*)
+		If[p>2,(*elliptic or hyperelliptic case*)
+			Message[ResolveSingularities::elliptic,tem];
+			If[OptionValue["GeneralPinch"],
+				If[Length[hintset]>1,Table[lv=Join[lv,{Resultant[hintset[[i]],hintset[[j]],xl[[1]]]//Factor}],{i,1,Length[hintset]},{j,i+1,Length[hintset]}]]
+			],
+			(*quadratic case*)
+			If[p==2,
+				If[OptionValue["GeneralPinch"],
+					lv=Join[lv,{Discriminant[tem,xl[[1]]]//Factor}]
+				]
+			]
+		];
+		If[OptionValue["SpecialKinematics"]=!={}&&Not@OptionValue["GeneralPinch"],(*in this case, we consider the degeneration of polynomials under special kinematics*)
+			Do[
+				If[Exponent[hintset[[i]],xl[[1]]]>2,Continue[]];(*powers too high*)
+				tem1=Discriminant[hintset[[i]]/.OptionValue["SpecialKinematics"],xl[[1]]]//Factor;
+				If[tem1===0,
+					Print["Special kinematics work. We will take more general pinch for ",Short[hintset[[i]],40]];
+					lv=Join[lv,{Discriminant[hintset[[i]],xl[[1]]]//Factor}]
+				]
+			,{i,1,Length[hintset]}];
+		];
 		AppendTo[sq,1];
 		If[Length[intset]>0,lv=Join[lv,Table[intset/.sol[[i]],{i,1,Length[sol]}]//NumeratorDenominator//Flatten//Factor//DeleteCases[#,_?NumericQ]&//DeleteDuplicates]];
 		If[EvenQ[p],
@@ -734,7 +925,7 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 			Do[
 				tem1=Times@@@NumeratorDenominator[hintset/.sol[[i]]//Factor];
 				If[FreeQ[tem1,0],
-					If[OptionValue[SelectQ],
+					If[OptionValue[SelectQ],(*now this is turned off by default*)
 						tem1=tem1//DeleteCases[#,_?PerfectSquareQ]&(*-----------------(^_^)-------------------*)
 						(*here we remove those terms which arising from perfect square under square root, they are conjectured to be spurious letters*)
 					];
@@ -752,7 +943,7 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 			];
 		];
 		
-		(*a sepcial kind of dlog, they are actually combinations of above dlogs already constructed, but they may give new varieties*)
+		(*a sepcial kind of ls (dlog), they are actually combinations of above ls (dlogs) already got, but they may give cancel some square roots in the expression and give a rational expression*)
 		If[Length[tem2]>1,
 			(*we search for the possible combinations of dlogs, they may give new varieties.*)
 			tem=Gather[tem2,(((Last[#1][[2]]-Last[#2][[2]])//Expand)===0||((Last[#1][[2]]+Last[#2][[2]])//Expand)===0)&]//DeleteCases[#,_?(Length[#]<2&)]&;(*we also consider the cases where the square roots are the same except for a minus sign *)
@@ -777,33 +968,59 @@ If[Length[xl]==1,(*if there is only one ISP remaining*)
 	(*if there are more than one ISPs*)
 	tem={{{{},intset,hintset}},{}};
 	(*Print["RSS tem: ",tem];*)
-	Do[
+	xla=xl;(*we may adjust the order in the intermediate step*)
+	supv=TimeConstrained[Do[
 		(*if one element of tem doesn't contain the variable to be studied at all, then this is not what we want*)
-		tem[[1]]=DeleteCases[tem[[1]],_?(FreeQ[#[[{2,3}]],xl[[i]]]&)];
-		tem[[2]]=DeleteCases[tem[[2]],_?(FreeQ[#[[{2,3}]],xl[[i]]]&)];
+		tem[[1]]=DeleteCases[tem[[1]],_?(FreeQ[#[[{2,3}]],xla[[i]]]&)];
+		tem[[2]]=DeleteCases[tem[[2]],_?(FreeQ[#[[{2,3}]],xla[[i]]]&)];
 		If[OptionValue[deBug],Print["tem: ",tem]];
 		tem1={{},{}};(*structure: {{first type},{second type}}, element:{{},intset,hintset}*)
 		Do[
-			tem2=ResolveSingleVariable[tem[[1,j,2]],tem[[1,j,3]],xl[[i]],LastVar->If[i==Length[xl],True,False],SelectQ->OptionValue[SelectQ]];
+			tem2=ResolveSingleVariable[tem[[1,j,2]],tem[[1,j,3]],xla[[i]],LastVar->If[i==Length[xl],True,False],SelectQ->OptionValue[SelectQ],"GeneralPinch"->OptionValue["GeneralPinch"],"SpecialKinematics"->OptionValue["SpecialKinematics"]];
 			If[tem2[[1]]=!={},tem1[[1]]=Join[tem1[[1]],MapAt[Join[tem[[1,j,1]],#]&,tem2[[1]],{All,1}]]];
 			If[tem2[[2]]=!={},tem1[[2]]=Join[tem1[[2]],MapAt[Join[tem[[1,j,1]],#]&,tem2[[2]],{All,1}]]]
 		,{j,1,Length[tem[[1]]]}];(*Analyze the first part of tem*)
 		Do[
-			tem2=ResolveSingleVariable[tem[[2,j,2]],tem[[2,j,3]],xl[[i]],LastVar->If[i==Length[xl],True,False],SelectQ->OptionValue[SelectQ]];
+			tem2=ResolveSingleVariable[tem[[2,j,2]],tem[[2,j,3]],xla[[i]],LastVar->If[i==Length[xl],True,False],SelectQ->OptionValue[SelectQ],"GeneralPinch"->OptionValue["GeneralPinch"],"SpecialKinematics"->OptionValue["SpecialKinematics"]];
 			If[tem2[[1]]=!={},tem1[[2]]=Join[tem1[[2]],MapAt[Join[tem[[2,j,1]],#]&,tem2[[1]],{All,1}]]];
 			If[tem2[[2]]=!={},tem1[[2]]=Join[tem1[[2]],MapAt[Join[tem[[2,j,1]],#]&,tem2[[2]],{All,1}]]]
 		,{j,1,Length[tem[[2]]]}];(*Analyze the second part of tem, these will all be classified as second type*)
 		tem=tem1;(*renew the original list*)
-	,{i,1,Length[xl]}];
+		If[tem1[[1]]=!={},(*we adjust the order according to the simplicity of variables appearing in the remaining expressions*)
+			nl=Table[{(Exponent[#,xla[[j]]]&/@tem1[[1,1,2]])//DeleteCases[#,0]&//Min,FirstPosition[tem1[[1,1,2]]//SortBy[#,LeafCount]&,xla[[j]],Missing["NotFound"],Infinity][[1]],xla[[j]]},{j,i+1,Length[xl]}]//SortBy[#,{First,#[[2]]&}]&;
+			xla=Join[Take[xla,i],nl[[All,-1]]];
+			If[OptionValue[deBug],Print["xl order renewed: ",xla]];
+		];
+	,{i,1,Length[xl]}],500,"overtime"];(*we set time constraints in case some calculation stuck here*)
+	If[supv==="overtime",Print["ResolveSingularities[] hasn't finished in 500 seconds. Baikov variables: ",xla];Return["overtime"]];
 	If[tem[[1]]=!={},
-		sol1=tem[[1,All,1]];
+		sol1=tem[[1,All,1]];(*form like {{a->1,b->2},{a->2,b->1}}*)
 		lv=Join[lv,tem[[1,All,{2,3}]]//Flatten];
-		sq=Join[sq,Table[Times@@(tem[[1,i,{3}]]//Flatten),{i,1,Length[tem[[1]]]}]];
+		tem2={};
+		Do[(*move the abbreviate R[i] from rational letter list to square root list*)
+			tem1=Times@@Cases[(FactorList[#][[All,1]]&/@tem[[1,s,2]])//Flatten,R[_]]/.{R[a_]:>Rlist[[a]]};
+			AppendTo[tem2,tem1];
+		,{s,1,Length[tem[[1]]]}];
+		sq=Join[sq,Table[Times@@(Join[tem[[1,s,{3}]],{tem2[[s]]}]//Flatten),{s,1,Length[tem[[1]]]}]];
+		If[OptionValue[RemoveSquareRoots],(*remove those solution which will result in square roots in the end*)
+			sol1=RemoveSquareRootsSol[sol1];
+			lv=lv//DeleteCases[#,_?(!FreeQ[#,R]&)]&;
+			sq=sq//DeleteCases[#,_?(!FreeQ[#,R]&)]&;
+		];
 	];
 	If[tem[[2]]=!={},
 		ssol=tem[[2,All,1]];
 		lv=Join[lv,tem[[2,All,{2,3}]]//Flatten];
-		sq=Join[sq,Table[Times@@(tem[[2,i,{3}]]//Flatten),{i,1,Length[tem[[2]]]}]];
+		tem2={};
+		Do[(*move the abbreviate R[i] from rational letter list to square root list*)
+			tem1=Times@@Cases[(FactorList[#][[All,1]]&/@tem[[2,s,2]])//Flatten,R[_]]/.{R[a_]:>Rlist[[a]]};
+			AppendTo[tem2,tem1];
+		,{s,1,Length[tem[[2]]]}];
+		sq=Join[sq,Table[Times@@(Join[tem[[2,s,{3}]],{tem2[[s]]}]//Flatten),{s,1,Length[tem[[2]]]}]];
+		If[OptionValue[RemoveSquareRoots],(*remove those solution which will result in square roots in the end*)
+			lv=lv//DeleteCases[#,_?(!FreeQ[#,R]&)]&;
+			sq=sq//DeleteCases[#,_?(!FreeQ[#,R]&)]&;
+		];
 	];
 	(*(*then we analyze the possible square roots in dlog construction*)
 	tem={{intset,hintset}};
@@ -826,7 +1043,7 @@ Return[{{sol1,ssol},lv//DeleteCases[#,_?NumericQ]&//Factor//DeleteDuplicates,sq/
 
 
 Options[Trans2Inf]={deBug->False};
-Trans2Inf[intset_,hintset_,xl_,OptionsPattern[]]:=Module[{tem,tem1,nintset={},nhintset={},LVlocal={},sqlocal={}},
+Trans2Inf[intset_,hintset_,xl_,OptionsPattern[]]:=Module[{tem,tem1,nintset={},nhintset={},LVlocal={},sqlocal={},k},
 tem=(Numerator/@(intset/.Thread@Rule[xl,xl/Subscript[x, 0]]//Factor))/.{Subscript[x, 0]->0}//Factor;
 nintset=(FactorList[#][[All,1]]&/@tem)//Flatten//DeleteCases[#,_?NumericQ]&;
 If[OptionValue[deBug],Print["nintset: ",nintset]];
@@ -856,7 +1073,7 @@ If[nhintset=!={},
 Return[{nintset//DeleteDuplicates,nhintset,LVlocal//DeleteDuplicates,sqlocal}];
 ];
 
-CheckValidity[brep_,subset_,krep_]:=Catch@Module[{cut,tem},
+CheckValidity[brep_,subset_,krep_]:=Catch@Module[{cut,tem,j},
 cut=Thread@Rule[Subscript[x,#]&/@subset,0];
 Do[
 	tem=(brep[[j,2,1,All,1]]//Gram2Poly[#,krep]&)/.cut//Factor;
@@ -867,11 +1084,11 @@ Throw[brep];
 
 
 Options[FindCover]={deBug->False};
-FindCover[list_,OptionsPattern[]]:=Module[{var,subset,flag=0,L=5,tem,temset,pos,result={},k=1},
+FindCover[list_,OptionsPattern[]]:=Module[{var,subset,flag=0,L=5,tem,temset,pos,result={},i,k=1},
 	var=list//Flatten//Union;
 	If[OptionValue[deBug],Print["var: ",var]];
 	If[Length[var]<=6,Return[{{var,{}}}]];
-	While[flag==0&&k<10,(*we will find a set of subsets which can cover the original set but with length smaller than the total set*)
+	While[flag==0&&k<20,(*we will find a set of subsets which can cover the original set but with length smaller than the total set*)
 		subset=Subsets[var,{L}];
 		If[OptionValue[deBug],Print["subset: ",subset]];
 		tem=Table[Intersection[subset[[i]],#]&/@list,{i,1,Length[subset]}];
@@ -883,12 +1100,12 @@ FindCover[list_,OptionsPattern[]]:=Module[{var,subset,flag=0,L=5,tem,temset,pos,
 		(*then we pick a collection of sets that can cover the original set*)
 		AppendTo[result,{subset[[1]],Thread@Rule[#,Table[Prime[20+i*2],{i,1,Length[#]}]]&[Complement[var,subset[[1]]]]}];
 		temset=subset[[1]];
-		While[flag==0&&k<10,
+		While[flag==0&&k<20,
 			tem=Length[Complement[#,temset]]&/@subset;
 			If[Max[tem]==0,flag=1;Break[]];
-			pos=PositionLargest[tem][[1]];
+			pos=FirstPosition[tem,Max[tem]][[1]](*PositionLargest[tem][[1]]*);
 			temset=Join[temset,subset[[pos]]]//Union;
-			AppendTo[result,{subset[[pos]],Thread@Rule[#,Table[Prime[20+i*2],{i,1,Length[#]}]]&[Complement[var,subset[[pos]]]]}];
+			AppendTo[result,{subset[[pos]],Thread@Rule[#,Table[Prime[20+i*3],{i,1,Length[#]}]]&[Complement[var,subset[[pos]]]]}];
 			k=k+1;
 		];
 		k=k+1
@@ -897,29 +1114,62 @@ FindCover[list_,OptionsPattern[]]:=Module[{var,subset,flag=0,L=5,tem,temset,pos,
 ];
 
 
-Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False};
-PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,bench,u,tsol,vrep,cover},
+PolyDim[exp_]:=Module[{var,rep},
+	(*return the dimension of one homogeneous multi-variate polynomial. If this is not a homogeous one, then it returns the maximal dimension of some monomials in this polynomial*)
+	var=Variables[exp]//Flatten;
+	rep=Thread@Rule[var,var*R];
+	Return[Exponent[exp/.rep,R]];
+]
+
+
+Options[RFindInstance]={deBug->False};
+RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,result,k,m=1,flag,count=1},
+	pow=Exponent[poly,#]&/@var;
+	list=(Partition[Riffle[pow,var],2]//SortBy[#,First]&)[[All,2]];(*sort the variables by its power*)
+	(*Print["list: ",list];*)
+	If[Length[var]<=2,Return[FindInstance[{poly==0,var[[1]]!=0},var,domain,n]]];
+	result=Reap[
+		flag=0;
+		Do[
+			If[count>n,Break[]];
+			rep=Thread@Rule[Drop[var,m+1],RandomPrime[{10,10000},Length[var]-m-1]];
+			sol=FindInstance[{(poly/.rep)==0(*,var[[1]]!=0*)},Take[var,m+1],domain]//Quiet;
+			If[OptionValue[deBug],Print["sol: ",sol]];
+			If[sol==={}||Head[sol]===FindInstance,
+				If[flag<10,flag=flag+1;Continue[],m=m+1;If[m==Length[var],Break[]]],
+				Sow[Join[sol[[1]],rep]];count=count+1;
+			]
+		,{k,1,100}];(*maximal 100 times*)
+	][[2]];
+	If[Not@FreeQ[result[[1]],Equal],Print["poly, var: ",{poly,var}]];
+	If[result==={},Return[{}],Return[result[[1]]]];
+];
+
+
+Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False,RemoveSquareRoots->True,"GeneralPinch"->False,"SpecialKinematics"->{}};
+PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{start,subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,rl,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,benchlist,bench,u,tsol,vrep,cover,dim},
+start=SessionTime[];
 subset=Subsets[topsector]//ReverseSortBy[#,Length]&//DeleteCases[#,{}]&;
 zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];(*all zero sectors*)
 subset=DeleteCases[subset,_?(MemberQ[zerolist,Sector2Digits[#]]&)];(*remove all zero sectors*)
 Print["totally ",Length[subset]," sectors need to be analyzed!"];
 
-(*subset={{1,2,3,4,5,6,7}};*)
-Do[(*analyze sector by sector*)
-	If[OptionValue[deBug],Print["subset: ",subset[[i]]]];
+(*subset={{1,2,3,4,5,6,7,8}};*)
+Monitor[Do[(*analyze sector by sector*)
+	If[OptionValue[deBug],Print["subset: ",subset[[a]]]];(*//////////////////////////////////*)
 	singular={};
-	brep=GetBaikovMatRep[result,subset[[i]],n];
+	brep=GetBaikovMatRep[result,subset[[a]],n,"looporder"->ExtractLoopOrder[krep]];
 	(*If[OptionValue[deBug],Print["path: ",brep]];*)
 	If[OptionValue[AugAna],
 		If[CheckValidity[brep,{},krep]==={},Continue[]];(*if some Grams in the representation equal to 0 before cut, then this sector is actually reducible already. We don't consider it.*)
-		tem={CheckValidity[brep,subset[[i]],krep],Thread@Rule[Subscript[x,#]&/@subset[[i]],0]};(*check validity of the representations*)
-		cc=Length[subset[[i]]];
+		tem={CheckValidity[brep,subset[[a]],krep],Thread@Rule[Subscript[x,#]&/@subset[[a]],0]};(*check validity of the representations*)
+		cc=Length[subset[[a]]];
 		While[tem[[1]]==={},
 			(*when maximal cut is 0, we consider the next-to-maximal cut and iterate this procedure*)
 			(*we assume that there is at least one next-to-maximal cut is not 0, when it is not the case, a warning will be generated*)
 			cc=cc-1;
-			If[cc<=Length[subset[[i]]]-2,If[OptionValue[AdInfo],Message[PolesAnalyze::misp,subset[[i]],cc]]];
-			cutr=Subsets[subset[[i]],{cc}];
+			If[cc<=Length[subset[[a]]]-2,If[OptionValue[AdInfo],Message[PolesAnalyze::misp,subset[[a]],cc]]];
+			cutr=Subsets[subset[[a]],{cc}];
 			Do[
 				tem={CheckValidity[brep,cutr[[j]],krep],Thread@Rule[Subscript[x,#]&/@cutr[[j]],0]};
 				If[tem[[1]]=!={},Break[]]
@@ -928,18 +1178,20 @@ Do[(*analyze sector by sector*)
 		brep=tem[[1]];
 		cutr=tem[[2]]
 		,
-		brep=GetBaikovMatRep[result,subset[[i]],n];
-		cutr=Thread@Rule[Subscript[x,#]&/@subset[[i]],0];
+		brep=GetBaikovMatRep[result,subset[[a]],n];
+		cutr=Thread@Rule[Subscript[x,#]&/@subset[[a]],0];
 	];
+	If[OptionValue[deBug],Print["sec rep: ",brep[[All,1]]]];(*//////////////////////////////////*)
 	If[OptionValue[SelectQ],If[OptionValue[SelectAllQ],len=2,len=Length[brep](*the number of minimal Baikov representations*)],len=1];
+	pos={};(*keep track of representations which hasn't finished in given time*)
 	Do[(*iteration for different representations of one sector*)
 		intset={};
 		hintset={};
 		sol={};
 		LVlocal={};
 		sqlocal={};
-		adcut=Complement[Subscript[x,#]&/@subset[[i]],Keys[cutr]];
-		If[OptionValue[deBug],Print["adcut: ",adcut]];
+		adcut=Complement[Subscript[x,#]&/@subset[[a]],Keys[cutr]];
+		(*If[OptionValue[deBug],Print["adcut: ",adcut]];*)
 		If[adcut=!={},adcut=Thread@Rule[adcut,0]];
 		(*when this is a next-to-maximal cut, we need to remember that the propagators should be always set to 0, this is done by adcut.*)
 		cut=Join[cutr,Thread@Rule[brep[[j,1]],0]];(*these variables brep[[j,1]] has been integrated out from the representation, we set it to 0 here*)
@@ -989,26 +1241,27 @@ Do[(*analyze sector by sector*)
 		];
 		intset=intset//DeleteDuplicates;
 		sqt=(Times@@sqlocal);
-		If[OptionValue[deBug],Print["intset,hintset: ",{intset,hintset}]];
-		tem=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo]];(*when len>1, it means that we should always apply our selection rule*)
-		If[OptionValue[deBug],Print["tem: ",tem];Print["sqlocal: ",sqlocal]];
+		(*If[OptionValue[deBug],Print["intset,hintset: ",{intset,hintset}]];*)
+		tem=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo],RemoveSquareRoots->OptionValue[RemoveSquareRoots],"GeneralPinch"->OptionValue["GeneralPinch"],"SpecialKinematics"->OptionValue["SpecialKinematics"]];(*when len>1, it means that we should always apply our selection rule*)
+		(*If[OptionValue[deBug],Print["tem: ",tem];Print["sqlocal: ",sqlocal]];*)
+		If[tem==="overtime",Print["section: ",subset[[a]]," repr: ",brep[[j]]," hasn't finished in given time! we give up the calculation of this representation."];AppendTo[pos,{j}];Continue[]];
 		tem1=tem[[1]];
 		sol=Join[sol,tem1//Flatten[#,1]&];
 		LVlocal=Join[LVlocal,tem[[2]]];
 		sqlocal=Join[{},sqt*tem[[3]]];
-		(*the square roots from the coefficients should be multiplied to those constructed from integrands*)
+		(*the square roots from the coefficients should be multiplied to those from integrands*)
 
 		(*now we consider sending all the isps to infinity plane which corresponds to the second Landau singularity*)
 		xl=Cases[{intset,hintset},Subscript[x,_],Infinity]//DeleteDuplicates;
-		If[OptionValue[deBug],If[brep[[j,1]]==={Subscript[x, 9],Subscript[x, 8],Subscript[x, 7],Subscript[x, 5],Subscript[x, 2]},Print["subset: ",subset[[i]]];Print["intset,hintset: ",{intset,hintset}]]];
 		If[Length[xl]>0,(*Length[xl]=1 case has been include before*)
 			tem=Trans2Inf[intset,hintset,xl];
 			intset=tem[[1]];
 			hintset=tem[[2]];
 			LVlocal=Join[LVlocal,tem[[3]]];
 			sqt=sqt*Times@@(tem[[4]]);
-			tem1=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo]];
+			tem1=ResolveSingularities[intset,hintset,SortQ->True,SelectQ->If[len>1,True,False],AdInfo->OptionValue[AdInfo],RemoveSquareRoots->OptionValue[RemoveSquareRoots],"GeneralPinch"->OptionValue["GeneralPinch"],"SpecialKinematics"->OptionValue["SpecialKinematics"]];
 			(*If[OptionValue[deBug],Print["tem1: ",tem1]];*)
+			If[tem1==="overtime",Print["section: ",subset[[a]]," repr: ",brep[[j]]," hasn't finished in given time! we give up the calculation of this representation."];AppendTo[pos,{j}];Continue[]];
 			tem=Join[Thread@Rule[xl,Infinity],#]&/@((tem1[[1]]//Flatten[#,1]&));
 			sol=Join[sol,tem(*//Flatten[#,1]&*)];
 			LVlocal=Join[LVlocal,tem1[[2]]];
@@ -1016,57 +1269,62 @@ Do[(*analyze sector by sector*)
 		];
 		AppendTo[singular,{sol//DeleteDuplicates,LVlocal//DeleteDuplicates,sqlocal//DeleteDuplicates,brep[[j,1]]}]
 	,{j,1,Length[brep]}];
-	tem=singular[[All,2]];
+	If[singular=!={},tem=singular[[All,2]],Print["The calculation of subset ",subset[[a]]," hasn't finished in given time. It has been skipped!"];Continue[]];
+	If[pos=!={},brep=Delete[brep,pos]];(*delete those representations whose calculations are not finished in given time*)
 	If[!OptionValue[SelectQ],
-		(*now we try to remove all spurious letters in a more rigorous way, we identify them by two steps, the first step will rule out some and the second step rule all of them out in principle*)
-		If[Length[tem]>1,
-			tem3=Reap[Do[
-				tem2=Delete[tem,k];
-				var=Variables/@(tem[[k]]);
-				cover=FindCover[var];(*find a cover of variables set. We will only take some subset of all variables as symbols and all others will be set to some numeric values*)
-				(*when there are too many variables, the calculation of Groebner basis is difficult, here we adopt a semi-numerical method to speed up the calculation*)
-				tem1={};
-				Do[
-					groebner=GroebnerBasis[tem[[k]]/.cover[[j,2]],cover[[j,1]],Modulus->Prime[2024]];(*calculate the Groebner basis from one representation*)
-					tem1=Append[tem1,Table[Position[(PolynomialReduce[#/.cover[[j,2]],groebner,cover[[j,1]],Modulus->Prime[2024]]&/@tem2[[l]])[[All,2]],_?(#=!=0&),1]//DeleteCases[#,{0}]&,{l,1,Length[tem2]}]];(*Find those polynomials that can not be reduced by the groebner basis calculated before*)
-				,{j,1,Length[cover]}];
-				Sow[Join[{tem[[k]]},Table[Delete[tem2[[l]],tem1[[All,l]]//Flatten[#,1]&//DeleteDuplicates],{l,1,Length[tem2]}]]//Flatten]
-				,{k,1,Length[tem]}];
-			][[2]];
-			If[tem3=!={},tem3=tem3[[1]]];
-			tem3=Intersection[Sequence@@tem3],
-			tem3=tem[[1]]
+		(*now we try to remove all spurious letters in a more rigorous way*)
+		tem3=tem;(*Print["tem: ",tem];*)
+		(*among different representations, not all analysis of them are reliable, especially when the number of remaining Baikov variables are larger than 3*)
+		(*now we will distinguish different representations according to the number of remaining Baikov variables*)
+		rl=n-Length[subset[[a]]]-(Length/@brep[[All,1]]);
+		(*If[OptionValue[deBug],Print["rl: ",rl]];*)
+		If[Length[rl]==1,
+			tem1=(FactorList[#][[All,1]]&/@(tem3[[1]]))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates;
+			tem2=tem1;
+			tem3={},
+			(*if these representations are equal in the remaining number of Baikov variables, all of them will be taken*)
+			tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
+			tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
+			tem1=tem//Flatten//DeleteDuplicates;
+			tem3=Complement[tem1,tem2];
 		];
-		tem1=(FactorList[#][[All,1]]&/@tem3)//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates;
-		(*in the last step, we check again the letters which can be spurious by the dimension calculation*)
-		tem=Table[(FactorList[#][[All,1]]&/@tem[[k]])//Flatten//DeleteCases[#,_?NumericQ]&,{k,1,Length[tem]}];
-		tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
-		tem3=Complement[tem1,tem2];
-		(*Print["subset: ",subset[[i]]];*)
-		(*If[subset[[i]]==={1,2,3,4,5,6,8},Print[" tem3: ",tem3];Print["cutr: ",cutr]];*)
+		(*Print["tem1: ",tem1];Print["tem3: ",tem3];*)
+		(*If[subset[[a]]==={1,2,3,4,5,6,8},Print[" tem3: ",tem3];Print["cutr: ",cutr]];*)
+		benchlist={};
+		Do[(*calculating the bench result*)
+			u=(Times@@Power@@@(((brep[[l,2,1]])//Gram2Poly[#,krep]&)/.cutr//Factor))//PowerExpand;
+			If[Head[u]===Times,u=(List@@@((List@@u)//DeleteCases[#,_?NumericQ]&))/.adcut//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&,u={List@@u}/.adcut//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&];
+			(*Print["sol: ",sol];(*/////////////////////////////////////////////*)*)
+			xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
+			If[xl==={},Continue[]];
+			u=Times@@Power@@@u;
+			AppendTo[benchlist,{u,xl,GetDimension[u,xl]}]
+		,{l,1,Length[brep]}];
+		(*If[OptionValue[deBug],Print["bench dimension: ",benchlist]];*)
 		Do[
 			flag=0;
 			pos=Position[singular[[All,2]],_?(MemberQ[#,tem3[[k]]]&),1];
 			brepr=(Delete[brep,pos]);
 			var=Variables[tem3[[k]]];
 			pow=Exponent[tem3[[k]],#]&/@var;
-			pos=FirstPosition[pow,1];
+			pos=FirstPosition[pow,1];(*if there is one variable linear in the equation, then the rational number solution of this system is easy to get*)
 			If[pos===Missing["NotFound"],
-				sol=FindInstance[Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]],var,Rationals,2];(*find two numeric solutions to check*)
-				If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",i];sol=FindInstance[{tem3[[k]]==0},var]],
+				(*If[subset[[a]]==={2,3,4,5,6,8},Print["tem3,var: ",{tem3,var}]];(*//////////////////////////////////*)*)
+				sol=TimeConstrained[RFindInstance[tem3[[k]](*Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]]*),var,Rationals,2],120,0];(*find two numeric solutions to check*)
+				If[sol===0,Print["haven't find solutions in given time. add this singularity: ",tem3[[k]]];(*tem1=Complement[tem1,{tem3[[k]]}];*)Continue[]];
+				If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",a];sol=FindInstance[{tem3[[k]]==0},var]],
 				tsol=Solve[tem3[[k]]==0,var[[pos]]][[1]];
 				sol=Table[vrep=Thread@Rule[Delete[var,pos],Table[Prime[2024+l*m],{m,1,Length[var]-1}]];Join[Thread@Rule[var[[pos]],var[[pos]]/.tsol/.vrep],vrep],{l,1,2}]//DeleteDuplicates
 			];
 			(*Print["dimension calculation"];(*//////////////////////////////////*)*)
+			(*Print["tem3: ",tem3[[k]]];*)
 			Do[
-				u=(((((brepr[[l,2,1]])//Gram2Poly[#,krep]&)/.cutr//Factor//DeleteCases[#,_?(FreeQ[First[#],x]&)]&)));
-				xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
-				If[xl==={},Continue[]];
-				u=Times@@Power@@@u;
-				bench=GetDimension[u,xl];
-				If[bench===$Failed,Continue[]];(*overtime, we will pass this case*)
-				(*If[subset[[i]]==={1,3,4,5,6,7,8},Print["brep: ",brepr[[l,2,1]]," cut: ",cut," u: ",u,"sol: ",sol," tem3[[k]]: ",tem3[[k]]]];*)
-				If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench,flag=1;Break[]]
+				pos=Position[brep,brepr[[l,1]]][[1,1]];
+				bench=benchlist[[pos]];
+				If[bench[[3]]===$Failed,Continue[]];(*overtime or degenerate, we will pass this case*)
+				u=bench[[1]];
+				xl=bench[[2]];
+				If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench[[3]],flag=1;Break[]]
 			,{l,1,Length[brepr]}];
 			(*Print["dimension calculation finished!"];(*//////////////////////////////////*)*)
 			If[flag==1,tem1=Complement[tem1,{tem3[[k]]}]]
@@ -1075,8 +1333,9 @@ Do[(*analyze sector by sector*)
 		tem2=If[tem=!={},Intersection[Sequence@@(tem)],{}];
 		tem1=If[tem=!={},Union[Sequence@@(tem)],{}](*our old way to remove spurious letters which is experimental*)
 	];
-	tsingular=AppendTo[tsingular,{singular[[All,{1,2,3,4}]],tem2,tem1,singular[[All,3]]//Flatten//DeleteDuplicates,subset[[i]]}]
-,{i,1,Length[subset]}];
+	tsingular=AppendTo[tsingular,{singular[[All,{1,2,3,4}]],tem2,tem1,singular[[All,3]]//Flatten//DeleteDuplicates,subset[[a]]}]
+,{a,1,Length[subset]}],ProgressIndicator[a,{1,Length[subset]}]];
+Print["time consuming: ",SessionTime[]-start];
 Return[tsingular];
 ];
 
@@ -1118,13 +1377,16 @@ If[OptionValue[OutputLevel]==2,Return[{result,spresult}]];
 ];*)
 
 
-Options[CompatiblePoleQ]={deBug->False,CutConstraint->False};
+Options[CompatiblePoleQ]={deBug->False,CutConstraint->True};
 CompatiblePoleQ[p1_,p2_,OptionsPattern[]]:=Module[{pt1,pt2,tem,xint},
 	If[p1==={}||p2==={},Return[True]];
-	If[OptionValue[CutConstraint],(*if we set constraint on the propagators that are cut*)
+	(*If[Xor[FreeQ[p1,Rule[_,Infinity]],FreeQ[p2,Rule[_,Infinity]]],
+		If[Not@ContainsOnly[Values[DeleteCases[{p1[[2]],p2[[2]]},_?(Not@FreeQ[#,Infinity]&)][[1]]],{0}],Return[False]]
+	];(*poles with infinity can not be mixed with poles without infinity except for poles taken to be 0 since otherwise there may be ambiguities when taking the limits*)*)
+	If[OptionValue[CutConstraint],(*poles are compatible only when they are in the same sector*)
 		xint={Cases[p1[[1]],Subscript[x,_],Infinity]//DeleteDuplicates,Cases[p2[[1]],Subscript[x,_],Infinity]//DeleteDuplicates}//SortBy[#,Length]&;
 		(* x variables which are cut variables*)
-		If[!ContainsAll[xint[[2]],xint[[1]]],Return[False]];
+		If[!ContainsExactly[xint[[2]],xint[[1]]],Return[False]];
 	];
 	xint=Intersection[Cases[p1,Subscript[x,_],Infinity]//DeleteDuplicates,Cases[p2,Subscript[x,_],Infinity]//DeleteDuplicates];
 	If[FreeQ[p1,Rule[_,Infinity]],
@@ -1147,18 +1409,46 @@ CompatiblePoleQ[p1_,p2_,OptionsPattern[]]:=Module[{pt1,pt2,tem,xint},
 ];
 
 
-Options[MaxPole]={deBug->False};
-MaxPole[p1_,p2_]:=Module[{a,b},
-	If[!CompatiblePoleQ[p1,p2],Return[0]];
-	a=Cases[p1,Subscript[x,_],Infinity];
-	b=Cases[p2,Subscript[x,_],Infinity];
-	If[ContainsAll[a,b],Return[1]];
-	If[ContainsAll[b,a],Return[2]];
-	Return[0];
+Options[CompatiblePoleGraph]={deBug->False,OutputLevel->2,Info->True};
+CompatiblePoleGraph[poles_,OptionsPattern[]]:=Module[{remain,graph,tem},
+	If[poles==={},Return[{{},{}}]];
+	If[Length[poles]==1,Return[{{1},{{1}}}]];(*in this case, one pole is compatible with itself*)
+	remain=poles;
+	(*Print["original total ",Length[remain]," poles"];*)
+	graph=Reap[
+			Do[
+				Do[
+					If[CompatiblePoleQ[remain[[i]],remain[[j]]],(*if this two poles are compatible*)
+						Sow[UndirectedEdge[i,j]](*then we add an undirected edge to this graph*)
+					]
+				,{j,i+1,Length[remain]}]
+			,{i,1,Length[remain]}];
+	][[2]];
+	If[graph=!={},graph=graph[[1]]];
+	If[OptionValue[OutputLevel]==1,Return[{graph}]];
+	(*edge=EdgeList[graph]/.{UndirectedEdge->List};*)
+	(*If[OptionValue[deBug],Print[FindClique[graph,{3},All]]];*)
+	tem=FindClique[graph,Infinity,All]//Reverse;(*we find complete subgraphs formed by compatible poles*)
+	If[tem=!={}&&OptionValue[Info],Print["maximal clique: ",Length[tem[[-1]]],"; # of cliques: ",Length[tem]]];
+	If[OptionValue[OutputLevel]==2,Return[{graph,tem}]];
 ];
 
 
-Options[RemoveSPole]={deBug->False};
+(*Options[MaxPole]={deBug->False};
+MaxPole[p1_,p2_]:=Module[{a,b,c,d},
+	If[!CompatiblePoleQ[p1,p2],Return[0]];
+	c=Cases[p1[[2]],Subscript[x,_],Infinity]//DeleteDuplicates//Sort;
+	d=Cases[p2[[2]],Subscript[x,_],Infinity]//DeleteDuplicates//Sort;
+	If[c=!=d,Return[0]];(*when the ISPs are not the same and they state the pole for one common variable, we take this two poles as intrinsically different.*)
+	(*a=Cases[p1,Subscript[x,_],Infinity]//DeleteDuplicates;
+	b=Cases[p2,Subscript[x,_],Infinity]//DeleteDuplicates;
+	If[ContainsAll[a,b],Return[1]];
+	If[ContainsAll[b,a],Return[2]];*)
+	Return[0];
+];*)
+
+
+(*Options[RemoveSPole]={deBug->False};
 RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,l1=1,l2=2},
 	tem=poles;
 	While[l1<l2,
@@ -1180,49 +1470,62 @@ RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,l1=1,l2=2},
 		If[OptionValue[deBug],Print[tem1];Print[tem[[l1-1]]]];
 	];
 	Return[tem];
+];*)
+(*Options[DecendentQ]={deBug->False};
+DecendentQ[basis_,pole_]:=Module[{tem,graph,xl,rep,flag=0},
+	tem=Select[basis,CompatiblePoleQ[#,pole]&];(*First select all poles in basis that are compatible with the pole we want to check*)
+	graph=CompatiblePoleGraph[tem,Info->False];(*generate the compatible pole graph which we will use in the next step*)
+	If[OptionValue[deBug],Print["graph",graph]];
+	xl=Cases[pole, Subscript[x,_],Infinity]//DeleteDuplicates;
+	Do[
+		rep=tem[[graph[[2,i]]]]//Flatten//DeleteDuplicates//Keys;
+		If[ContainsAll[rep,xl],flag=1;Break[]];
+	,{i,1,Length[graph[[2]]]}];
+	If[flag==1,Return[True],Return[False]];
 ];
 
+Options[RemoveSPole]={deBug->False};
+RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,basis,i},
+	tem=poles//SortBy[#,Length[(Cases[#,Subscript[x,_],Infinity]//DeleteDuplicates)]&]&;(*sort the poles by their length*)
+	(*the problem is to use a small set of poles in the list to generate all possible poles we get.*)
+	If[tem==={},Return[tem]];
+	basis=Take[tem,1];
+	Do[
+		(*for every pole, we determine whether it can be covered by a set of smaller sets*)
+		If[OptionValue[deBug]&&i<10,Print["basis",basis];Print["poles: ",tem[[i]]]];
+		If[DecendentQ[basis,tem[[i]]],Continue[],AppendTo[basis,tem[[i]]]]
+	,{i,2,Length[tem]}];
+	Return[basis];
+];*)
 
-(*enhanced version of RemoveSPole*)
-RemoveSPoleBeta[poles_]:=Module[{tem,tem1,den},
+
+(*extension of RemoveSPole*)
+RemoveSPoleBeta[poles_]:=Module[{tem,tem1,den,isprep,inf,infr},
 	tem=poles;
-	(*now if the isp part of poles do not involve infinity, we directly substitute its values*)
+	(*This function simplifies the poles which may be very simple if the former variable depends on the latter variable*)
 	tem1=Reap[
 		Do[
-			If[!FreeQ[tem[[i]],Infinity],Sow[tem[[i]]];Continue[]];
-			den=Denominator[Values[tem[[i,2]]]]//.tem[[i,2]]//Factor;
-			If[!FreeQ[den,0],Sow[tem[[i]]];Continue[]];(*avoid the situation where some variable becomes infinity after substituting values*)
-			Sow[{tem[[i,1]],Thread@Rule[Keys[tem[[i,2]]],Values[tem[[i,2]]]//.tem[[i,2]]//Factor]}]
+			If[!FreeQ[tem[[i]],Infinity],
+				inf=DeleteCases[tem[[i,2]],_?(FreeQ[#,Infinity]&)];
+				infr=Drop[DeleteCases[tem[[i,2]],_?(!FreeQ[#,Infinity]&)],-1];
+				den=Denominator[Values[infr]]//.infr//Factor//Quiet;
+				If[!FreeQ[den,0],Sow[tem[[i]]];Continue[]];(*avoid the situation where some variable becomes infinity after substituting values*)
+				isprep=Thread@Rule[Keys[infr],Values[infr]//.infr//Factor]//Sort;
+				Sow[{tem[[i,1]],Join[inf,isprep,Take[tem[[i,2]],-1]]}]
+				,
+				den=Denominator[Values[tem[[i,2]]]]//.tem[[i,2]]//Factor//Quiet;
+				If[!FreeQ[den,0],Sow[tem[[i]]];Continue[]];(*avoid the situation where some variable becomes infinity after substituting values*)
+				isprep=Thread@Rule[Keys[tem[[i,2]]],Values[tem[[i,2]]]//.tem[[i,2]]//Factor]//Sort;(*the second part of tem[[i]] is for isp*)
+				Sow[{tem[[i,1]],isprep}]
+			];
 		,{i,1,Length[tem]}];
 	][[2]];
-	If[tem1=!={},tem1=RemoveSPole[tem1[[1]]]];
+	If[tem1=!={},tem1=DeleteDuplicates[tem1[[1]]]];
 	Return[tem1];
 ];
 
 
-Options[CompatiblePoleGraph]={deBug->False,OutputLevel->2};
-CompatiblePoleGraph[poles_,OptionsPattern[]]:=Module[{remain,graph,tem},
-	remain=poles;
-	(*Print["original total ",Length[remain]," poles"];*)
-	graph=Reap[
-			Do[
-				Do[
-					If[CompatiblePoleQ[remain[[i]],remain[[j]]],(*if this two poles are compatible*)
-						Sow[UndirectedEdge[i,j]](*then we add an undirected edge to this graph*)
-					]
-				,{j,i+1,Length[remain]}]
-			,{i,1,Length[remain]}];
-	][[2,1]];
-	If[OptionValue[OutputLevel]==1,Return[{graph}]];
-	(*edge=EdgeList[graph]/.{UndirectedEdge->List};*)
-	(*If[OptionValue[deBug],Print[FindClique[graph,{3},All]]];*)
-	tem=FindClique[graph,Infinity,All]//Reverse;(*we find complete subgraphs formed by compatible poles*)
-	If[tem=!={},Print["maximal clique: ",Length[tem[[-1]]],"; # of cliques: ",Length[tem]]];
-	If[OptionValue[OutputLevel]==2,Return[{graph,tem}]];
-];
-
-
-Options[ExtractPoleInfo]={deBug->False,OutputLevel->1,Simp->True,Enhanced->False};
+Options[ExtractPoleInfo]={deBug->False,OutputLevel->1,Simp->True,Enhanced->True,RemoveSquareRoots->True};
 ExtractPoleInfo[exp_,n_,OptionsPattern[]]:=Module[{tem,tem1,xl,isp={},result={},poles},
 result=Reap[Do[
 	tem=exp[[i]];(*for every sector*)
@@ -1237,8 +1540,10 @@ If[OptionValue[OutputLevel]==1,
 ];
 Print["original total ",Length[tem1]," poles"];
 If[!OptionValue[Simp],Return[tem1]];
-poles=RemoveSPole[tem1];(*remove poles that are already contained in other poles*)
+poles=tem1;
+(*poles=RemoveSPole[tem1];(*remove poles that are already contained in other poles*)*)
 If[OptionValue[Enhanced],poles=RemoveSPoleBeta[poles]];(*in enhanced version, we further remove some poles which can be identified to each other by substitute the values of the variables. For example, {x1->s-x2,x2->s} is equivalent to {x1->0,x2->s}*)
+If[OptionValue[RemoveSquareRoots],poles=poles//DeleteCases[#,_?(Not@FreeQ[#,R]&)]&];(*remove poles containing R[i], that is, containing square roots*)
 (*tem=CompatiblePoleMerge[poles];(*merge compatible poles*)
 poles=RemoveSPole[tem];*)
 Print["final total ",Length[poles]," poles"];
@@ -1246,11 +1551,11 @@ Return[{poles,Sequence@@CompatiblePoleGraph[poles]}];
 ];
 
 
-ExtractSquareRoots[exp_]:=((Times@@Power@@@(MapAt[Mod[#,2]&,DeleteCases[FactorList[#],{_?NumericQ,_}],{All,2}]))&/@(exp[[All,4]]//Flatten//DeleteCases[#,_?NumericQ]&))//DeleteCases[#,1]&//DeleteDuplicates;
+ExtractSquareRoots[exp_]:=((Times@@Power@@@(MapAt[Mod[#,2]&,DeleteCases[FactorList[#],{_?NumericQ,_}],{All,2}]))&/@(exp[[All,4]]//Flatten//DeleteCases[#,_?NumericQ]&))//DeleteCases[#,1]&//DeleteDuplicates[#,((#1-#2)===0||(#1+#2)===0)&]&;
 
 
 Options[ConstructLetter]={deBug->False};
-ConstructLetter[Gl1_,Gl2_,type_,OptionsPattern[]]:=Module[{G1,G2,l1,l2,od,mm,MM,var,var1,var2,s1,s2,tem,tem1,sys,sol,mat,mat1,t,t1,pos,r},
+ConstructLetter[Gl1_,Gl2_,type_,numrep_,OptionsPattern[]]:=Module[{G1,G2,l1,l2,od,mm,MM,var,var1,var2,s1,s2,tem,tem1,sys,sol,mat,mat1,t,t1,pos,r},
 If[Head[Gl1[[1]]]===G,G1=Gl1[[1]],If[MatchQ[Gl1[[1]],-G[__]],G1=-Gl1[[1]],Return[$Failed]]];
 If[Head[Gl2[[1]]]===G,G2=Gl2[[1]],If[MatchQ[Gl2[[1]],-G[__]],G2=-Gl2[[1]],Return[$Failed]]];
 l1=Length[G1[[1]]];
@@ -1281,7 +1586,7 @@ If[Abs[l1-l2]==0,
 		sol=NullSpace[sys];
 		If[OptionValue[deBug],Print["sys: ",sys];Print["sol: ",sol]];
 		sol=Table[Thread@Rule[Join[mat,mat1],sol[[i]]],{i,1,Length[sol]}];
-		mat=(mat/.sol)//RowReduce;(*note that there are sevel set solutions, so this is a matrix*)
+		mat=(mat/.sol)//RowReduce;(*note that there are several set solutions, so this is a matrix*)
 		mat1=(mat1/.sol)//RowReduce;
 		If[Length[sol]<r,Message[ConstructLetter::fail,{G1[[1]],G2[[1]]}]];
 		(*If[OptionValue[deBug],Print["s1,s2: ",{s1,s2}];Print["mat: ",mat]];*)
@@ -1331,17 +1636,17 @@ If[Abs[l1-l2]==0,
 Label[FINAL];
 If[type==1,
 	If[Abs[l1-l2]==0,
-		Return[{dlogForm[G[Sequence@@od],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]],-G[mm,mm]*G[MM,MM],{(*Gl1[[3]],Gl2[[3]]*)},1}],
-		Return[{dlogForm[G[Sequence@@od],-G[mm,mm]*G[MM,MM]],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]],{(*Gl1[[3]],Gl2[[3]]*)},1}]
+		Return[{dlogForm[G[Sequence@@od],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]],-G[mm,mm]*G[MM,MM],{Abs@Sum[Power[10,i]*(G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}],Abs@Sum[Power[10,i]*(-G[mm,mm]*G[MM,MM]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}]},1}],
+		Return[{dlogForm[G[Sequence@@od],-G[mm,mm]*G[MM,MM]],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]],{Abs@Sum[Power[10,i]*(-G[mm,mm]*G[MM,MM]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}],Abs@Sum[Power[10,i]*(G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}]},1}]
 	],
 	If[Abs[l1-l2]==0,
-		Return[{dlogForm[G[Sequence@@od],-G[mm,mm]*G[MM,MM]],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]],{(*Gl1[[3]],Gl2[[3]]*)},2}],
-		Return[{dlogForm[G[Sequence@@od],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]],-G[mm,mm]*G[MM,MM],{(*Gl1[[3]],Gl2[[3]]*)},2}]
+		Return[{dlogForm[G[Sequence@@od],-G[mm,mm]*G[MM,MM]],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]],{Abs@Sum[Power[10,i]*(-G[mm,mm]*G[MM,MM]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}],Abs@Sum[Power[10,i]*(G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}]},2}],
+		Return[{dlogForm[G[Sequence@@od],G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]],-G[mm,mm]*G[MM,MM],{Abs@Sum[Power[10,i]*(G[od[[1]],od[[1]]]*G[od[[2]],od[[2]]]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}],Abs@Sum[Power[10,i]*(-G[mm,mm]*G[MM,MM]/.{G[{},{}]->1}//Gram2Poly[#,numrep[[i]]]&),{i,1,3}]},2}]
 	]
 ];
 ];
 
-ConstructFromGram[gramlist_]:=Table[ConstructLetter[gramlist[[i,1]],gramlist[[i,j]],If[IntegerQ[gramlist[[i,1,2]]/.{\[Epsilon]->0}],2,1]],{i,1,Length[gramlist]},{j,2,Length[gramlist[[i]]]}]//Flatten[#,1]&//DeleteDuplicatesBy[#,({First[#],Last[#]}&)]&;
+ConstructFromGram[gramlist_,numrep_]:=Table[ConstructLetter[gramlist[[i,1]],gramlist[[i,j]],If[IntegerQ[gramlist[[i,1,2]]/.{\[Epsilon]->0}],2,1],numrep],{i,1,Length[gramlist]},{j,2,Length[gramlist[[i]]]}]//Flatten[#,1]&//DeleteDuplicatesBy[#,({First[#],Last[#]}&)]&;
 
 LetterPathRefined[reform_,letters_,krep_]:=Module[{glist,tem,path,pos,letterref},
 (*Note that the structure of reform is {{g,c,{paths}},{g,c,{paths}},...}*)
@@ -1360,13 +1665,32 @@ Return[letterref[[2,1]]];
 ];
 
 
+SameGramQ[gp1_,gp2_]:=Module[{var,numrep,rep,i},
+	var=(Cases[{gp1,gp2},_G,Infinity]//DeleteDuplicates)/.{G[a_,b_]:>GramMat[a,b,{}]}//Variables;
+	numrep=Thread@Rule[var,Table[Prime[100+23*i],{i,1,Length[var]}]];
+	If[Not@FreeQ[{gp1-gp2,gp1+gp2}//Gram2Poly[#,numrep]&,0],Return[True],Return[False]];
+];
+
+
+Options[SameAlgLetterGramQ]={deBug->False};
+SameAlgLetterGramQ[letter1_,letter2_,OptionsPattern[]]:=Module[{sq1,sq2},
+	sq1=Cases[letter1,Power[a_,1/2]->a,Infinity]//DeleteDuplicates;
+	sq2=Cases[letter2,Power[a_,1/2]->a,Infinity]//DeleteDuplicates;
+	If[SameGramQ[sq1,sq2]&&SameGramQ[letter1[[2]],letter2[[2]]],Return[True],Return[False]];
+];
+
+
 Options[ExtractAlgLetter]={deBug->False,KineVar->{},KineRestrict->False,LoopRestrict->False,OneLoop->False};
-ExtractAlgLetter[result_,topsector_,n_,OptionsPattern[]]:=Module[{subset,zerolist,reform,flag,rep,glist,tem,cmGram,letter,letterref,summary={},a},
+ExtractAlgLetter[result_,topsector_,n_,OptionsPattern[]]:=Module[{subset,zerolist,reform,var,numrep,rep,glist,tem,cmGram,letter,letterref,summary={},i,a},
 reform=ReformRep[result];(*Note that the structure of reform is {{g,c,{paths}},{g,c,{paths}},...}*)
-subset=Subsets[topsector]//ReverseSortBy[#,Length]&;(*all zero sectors*)
-zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];
+subset=Subsets[topsector]//ReverseSortBy[#,Length]&;
+zerolist=GetMatZeroSector[result,n,Complement[Range[n],topsector]];(*all zero sectors*)
 subset=DeleteCases[subset,_?(MemberQ[zerolist,Sector2Digits[#]]&)];(*remove all zero sectors*)
 Print["totally ",Length[subset]," sectors need to be analyzed!"];
+
+(*get all variables and take numeric values of them to give every letter we construct an identification code*)
+var=Variables[Cases[result[[1]],_G,Infinity]/.{G[o_,z_]:>GramMat[o,z,{}]}];
+numrep=Table[Thread@Rule[var,RandomPrime[{100,10000},Length[var]]],{i,1,3}];
 
 letterref={};(*keep track of algbraic letters so that repeated ones will not included in the result*)
 Monitor[Do[
@@ -1374,8 +1698,9 @@ Monitor[Do[
 	rep=GetBaikovMatRep[result,subset[[a]],n]//Simplify;
 	cmGram=ExtractRelevantGramSim[rep,reform,n,KineVar->OptionValue[KineVar],KineRestrict->OptionValue[KineRestrict],LoopRestrict->OptionValue[LoopRestrict],OneLoop->OptionValue[OneLoop](*,deBug->If[subset[[a]]==={2,3,4,6},True,False]*)];
 	(*If[OptionValue[deBug],Print["cmGram: ",cmGram]];*)
-	letter=ConstructFromGram[cmGram];(*//DeleteCases[#,_?(!AdmissibleLetterQ[#]&)]&*);(*element: {Log[_],_,1|2}*)
-	letterref=Join[letterref,letter]//DeleteDuplicatesBy[#,({First[#],Last[#]}&)]&;(*Delete duplicates by the first and last term.*)
+	letter=ConstructFromGram[cmGram,numrep];(*//DeleteCases[#,_?(!AdmissibleLetterQ[#]&)]&*);(*element: {Log[_],_,1|2}*)
+	letter=Complement[letter,letterref];
+	letterref=Join[letterref,letter]//DeleteDuplicatesBy[#,#[[3]]&]&;(*Delete duplicates by the first term.*)
 	letter=Intersection[letter,letterref];(*take only unique terms that haven't appeared so far*)
 	(*letterref=LetterPathRefined[reform,letter,krep];*)
 	AppendTo[summary,{letter,subset[[a]]}];
@@ -1395,16 +1720,16 @@ Return[(FactorList[#][[All,1]]&/@(polestructure[[All,3]]//Flatten//DeleteDuplica
 
 
 Options[SpecialSimplify]={AdRep->{},deBug->False};
-SpecialSimplify[{gr_,ga_},OptionsPattern[]]:=Catch@Module[{rep,rp,tem,sq,numsq,densq},
-sq=ga//Factor;
+SpecialSimplify[{gr_,ga_},OptionsPattern[]]:=Catch@Module[{rep,rp,tem,sq,numsq,densq,R},
+sq=ga//Together;
 If[sq===0,Throw[{0,0}]];
-rp=gr//Factor;
+rp=gr//Together;
 If[rp===0,Throw[{0,0}]];(*If there is one zero, then this letter will be degenerate*)
 rep=OptionValue[AdRep];
 (*we apply the replacement to the expression one-by-one*)
 If[rep==={},
 	If[Head[sq]===Times,sq=List@@sq,sq={sq}];
-	tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[sq[[i]],1/2]]],{i,1,Length[sq]}];(*take the square root, R is introduced to avoid things like Power[a,3/2]*)
+	tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[sq[[i]],1/2]]],{i,1,Length[sq]}];(*take the square root, RR is introduced to avoid things like Power[a,3/2]*)
 	tem=((Times@@tem)/(rp))//Factor;(*cancel common parts between gr and Sqrt[ga]*)
 	If[tem===0,Throw[{0,0}]];
 	numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
@@ -1414,26 +1739,27 @@ If[rep==={},
 	If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
 	tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;(*remove square root part*)
 	Throw[{densq/(tem)/.{R->1}//Factor,(Times@@(sq(*/.{Power[z_,1/2]:>z}*)/.{R->1}))//Factor}],
-
+	
+	(*we add time constraints in case the Factor[] take too long time*)
 	Do[
-		sq=sq/.rep[[i]]//Factor;
+		sq=TimeConstrained[sq/.rep[[i]]//Factor,60,sq/.rep[[i]]//Together];
 		If[sq===0,Throw[{0,0}]];
 		If[(Denominator[rp]/.rep[[i]]//Factor)===0,rp=0;sq=0;Break[]];(*when the rational part becomes infinity after replacement*)
-		rp=rp/.rep[[i]]//Factor;
+		rp=TimeConstrained[rp/.rep[[i]]//Factor,60,rp/.rep[[i]]//Together];
 		If[rp===0,Throw[{0,0}]];(*when the rational part or square root part become 0 after replacement*)
 		If[Head[sq]===Times,sq=List@@sq,sq={sq}];
 		tem=Table[If[MatchQ[sq[[i]],Power[_,_?EvenQ]],Replace[sq[[i]],Power[z_,a_]:>Power[z,a/2]],If[MatchQ[sq[[i]],Power[_,_?OddQ]],Replace[sq[[i]],Power[z_,a_]:>Power[R*z,1/2]*Power[z,Quotient[a,2]]],Power[R*sq[[i]],1/2]]],{i,1,Length[sq]}];
 		If[OptionValue[deBug],Print["sq: ",sq];Print["rp: ",rp];Print["tem: ",tem]];
-		tem=((Times@@tem)/(rp))//Factor;
+		tem=TimeConstrained[((Times@@tem)/(rp))//Factor,60,((Times@@tem)/(rp))//Together//Cancel];
 		If[tem===0,rp=0;sq=0;Break[]];
 		numsq=Cases[{Numerator[tem]},Power[z_,1/2]->z,Infinity];(*treat the square root in numerator and denomiantor separately*)
 		densq=Cases[{Denominator[tem]},Power[z_,1/2]->z,Infinity];
 		sq=Join[numsq,densq];
 		densq=Times@@densq;
 		If[OptionValue[deBug],Print["tem ",tem];Print["sq ",sq];Print["densq: ",densq]];
-		tem=tem/.{Power[_,1/2|-1/2]->1}//Factor;
-		rp=densq/(tem)//Factor;
-		sq=(Times@@(sq(*/.{Power[z_,1/2]:>z}*)))//Factor;
+		tem=TimeConstrained[tem/.{Power[_,1/2|-1/2]->1}//Factor,60,tem/.{Power[_,1/2|-1/2]->1}];
+		rp=TimeConstrained[densq/(tem)//Factor,60,densq/(tem)//Together//Cancel];
+		sq=TimeConstrained[(Times@@(sq(*/.{Power[z_,1/2]:>z}*)))//Factor,60,(Times@@(sq(*/.{Power[z_,1/2]:>z}*)))];
 		If[Denominator[sq]=!=1,rp=rp*Denominator[sq];sq=Numerator[sq]*Denominator[sq]];(*when expression under square root has denominator, then multiply a common factor to remove it*)
 		rp=rp/.{R->1};sq=sq/.{R->1};
 		If[OptionValue[deBug],Print["{rp,sq}: ",{rp,sq}]]
@@ -1466,7 +1792,11 @@ If[pole=!={},
 			rep={};
 			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],Print["not projective curve!: ",ntem];ntem],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
 			,
-			rep=pole[[k]];rep1={}
+			If[!FreeQ[pole[[k]],Subscript[x, 0]]||!FreeQ[Values[pole[[k]]],x],(*decides whether we can substitute the variables once and for all, or we need to perform step-by-step, when there is infinity, this always needs to be done step by step.*)
+				rep=pole[[k]];rep1={},
+				If[({Numerator[tem[[1]]],Denominator[tem[[1]]]^2*tem[[2]]}/.pole[[k]]//Expand)=!={0,0},rep={pole[[k]]};rep1={},rep=pole[[k]];rep1={}]
+			];
+			(*rep=pole[[k]];rep1={}*)
 		];
 		If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1];Print["tem: ",tem]];
 		tem=SpecialSimplify[tem,AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];
@@ -1474,87 +1804,126 @@ If[pole=!={},
 	(*if pole==={}, then this only involves pure kinematics grams*)
 	tem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)]
 ];
-If[((tem[[1]]^2-tem[[2]]//Factor)===0),Return[0]];
+If[((tem[[1]]^2-tem[[2]]//Together)===0),Return[0]];
 Return[Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&]]
 ];
 
-Options[ApplyPoleToGram]={deBug->False,AdRep->{}};
-ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,fac,rep,rep1,isp,pos},
-	tem=Times@@(Det/@((gram/.{G[a_,b_]:>GramMat[a,b,krep]})/.pole[[1]]))/.OptionValue[AdRep]//Factor;
-	If[Length[pole]==1,tem=Times@@(PerfectSquareSplit[tem][[2]])];
+Options[ApplyPoleToGram]={deBug->False,AdRep->{},"RemovePerfectSquare"->True};
+ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,tem1,ntem,fac,rep,rep1,isp,pos,k,intexp,i},
+	tem=(Det/@((gram/.{G[a_,b_]:>GramMat[a,b,krep]})/.pole[[1]]))/.OptionValue[AdRep];
+	intexp=(FactorList/@tem)//Flatten[#,1]&//DeleteCases[#,{_,_?(EvenQ)}]&;
+	ntem=(intexp[[All,1]]);
+	If[OptionValue[deBug],Print["ntem: ",ntem];];
+	If[Not@OptionValue["RemovePerfectSquare"],(*if we don't remove the perfect square in the Gram*)
+		Do[
+		If[!FreeQ[pole[[k]],Infinity],
+			isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
+			If[OptionValue[deBug],Print["isp: ",isp]];
+			rep=Thread@Rule[isp,isp/Subscript[x, 0]];
+			tem1=DeleteCases[pole[[k]],Rule[_,Infinity]];
+			rep1=If[tem1=!={},If[MemberQ[isp,tem1[[-1,1]]],Drop[tem1,-1],tem1],{}]
+			(*when projecting to infinity plane, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
+			,
+			pos=Position[pole[[k]],{__},1];
+			If[pos==={},rep=pole[[k]];rep1={},rep=Take[pole[[k]],pos[[1,1]]]//Flatten;rep1=Drop[pole[[k]],pos[[1,1]]]];
+		];
+		(*tem=SpecialSimplify[{1,Times@@tem},AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];*)
+		If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
+		
+		If[!FreeQ[rep,Subscript[x, 0]],
+			ntem=Numerator[ntem/.rep//Together];
+			ntem=ntem/.{Subscript[x, 0]->0}//Factor;(*here we take the variables to infinity*)
+			If[OptionValue[deBug],Print["ntem: ",ntem]];
+			Do[
+				If[Keys[rep1[[i]]]===Subscript[x, 0],Continue[]];(*Subscript[x, 0] has been removed above*)
+				ntem=NumeratorDenominator[ntem/.rep1[[i]]//Together]//Flatten;
+			,{i,1,Length[rep1]}],
+			If[FreeQ[Values[rep],x],(*the replacement is free of order*)
+				ntem=ntem/.rep//Together,
+				Do[
+				    ntem=NumeratorDenominator[ntem/.rep[[i]]//Together]//Flatten;
+				,{i,1,Length[rep]}];
+			];
+		];
+		,{k,2,Length[pole]}];
+		Return[Times@@ntem//Factor];
+	];
+	
 	Do[
 		If[!FreeQ[pole[[k]],Infinity],
 			isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
 			If[OptionValue[deBug],Print["isp: ",isp]];
 			rep=Thread@Rule[isp,isp/Subscript[x, 0]];
-			ntem=DeleteCases[pole[[k]],Rule[_,Infinity]];
-			rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],ntem],{}]
+			tem1=DeleteCases[pole[[k]],Rule[_,Infinity]];
+			rep1=If[tem1=!={},If[MemberQ[isp,tem1[[-1,1]]],Drop[tem1,-1],tem1],{}]
 			(*when projecting to infinity plane, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
 			,
 			pos=Position[pole[[k]],{__},1];
-			If[pos==={},rep={};rep1=pole[[k]],rep=Take[pole[[k]],pos[[1,1]]]//Flatten;rep1=Drop[pole[[k]],pos[[1,1]]]];
+			If[pos==={},rep=pole[[k]],rep=Take[pole[[k]],pos[[1,1]]]//Flatten;rep1=Drop[pole[[k]],pos[[1,1]]]];
 		];
 		(*tem=SpecialSimplify[{1,Times@@tem},AdRep->Join[rep,rep1,{OptionValue[AdRep]}]];*)
-		ntem=tem;
 		If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
-		If[OptionValue[deBug],Print["tem: ",tem]];
+		
+		
 		If[!FreeQ[rep,Subscript[x, 0]],
-			ntem=Numerator[ntem/.rep//Factor]/.{Subscript[x, 0]->0};(*here we take the variables to infinity first*)
+			ntem=NumeratorDenominator[ntem/.rep//Together]//Flatten;
+			intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;(*remove perfect square*)
+			ntem=(Tally[intexp]//DeleteCases[#,{_,_?EvenQ}]&)[[All,1]];(*remove perfect square*)
+			ntem=ntem/.{Subscript[x, 0]->0};(*here we take the variables to infinity*)
+			intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;
+			ntem=(intexp);
+			If[OptionValue[deBug],Print["ntem: ",ntem]];
 			Do[
-				ntem=Times@@NumeratorDenominator[ntem/.rep1[[i]]//Factor];
-				ntem=Times@@(PerfectSquareSplit[ntem][[2]])(*remove perfect square*)
+				If[Keys[rep1[[i]]]===Subscript[x, 0],Continue[]];(*Subscript[x, 0] has been removed above*)
+				ntem=NumeratorDenominator[ntem/.rep1[[i]]//Together]//Flatten;
+				intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;
+				ntem=(intexp)(*remove perfect square*)
 			,{i,1,Length[rep1]}],
-			Do[
-				ntem=Times@@NumeratorDenominator[ntem/.rep[[i]]//Factor];
-				ntem=Times@@(PerfectSquareSplit[ntem][[2]])(*remove perfect square*)
-			,{i,1,Length[rep]}];
+			If[FreeQ[Values[rep],x],(*the replacement is free of order*)
+				ntem=NumeratorDenominator[ntem/.rep//Together]//Flatten;
+				(*If[OptionValue[deBug],Print["ntem: ",ntem]];*)
+				intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;(*remove perfect square*)
+				intexp=(Tally[intexp]//DeleteCases[#,{_,_?EvenQ}]&)[[All,1]];(*remove perfect square*)
+				If[Not@FreeQ[intexp,0],
+				   (*when the result is 0, we need to be careful since intermediate step may generate an expression which is a perfect square and it is 0 at last, then this 0 is not what we want and we must apply the replacement step by step*)
+				   Do[
+				       ntem=NumeratorDenominator[ntem/.rep[[i]]//Together]//Flatten;
+					   intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;
+					   ntem=(intexp)(*remove perfect square*)
+				   ,{i,1,Length[rep]}],
+				  ntem=intexp
+				],
+				Do[
+				    ntem=NumeratorDenominator[ntem/.rep[[i]]//Together]//Flatten;
+				    (*If[OptionValue[deBug],Print["ntem: ",ntem]];*)
+					intexp=Table[TimeConstrained[PerfectSquareSplit[ntem[[i]]][[2]],30,ntem[[i]]],{i,1,Length[ntem]}]//Flatten//DeleteCases[#,1|-1]&;
+					ntem=(intexp)(*remove perfect square*)
+				,{i,1,Length[rep]}];
+			];
 		];
-		(*If[rep1=!={},rep1=Thread@Rule[Keys[rep1],Values[rep1]//.Drop[rep1,-1]]//Factor];
-		If[rep1=!={},rep1=Thread@Rule[Keys[rep1],Values[rep1]//.rep1]//Factor];*)
-		tem=ntem;
 	,{k,2,Length[pole]}];
+	ntem=(Tally[ntem]//DeleteCases[#,{_,_?EvenQ}]&)[[All,1]];
+	tem=Times@@ntem;
 Return[tem];
 ];
 
-(*Options[ApplyPoleToGram]={deBug->False,AdRep->{}};
-ApplyPoleToGram[pole_,gram_,krep_,OptionsPattern[]]:=Module[{tem,ntem,rep,rep1,isp,den,pos},
-tem=(Det/@((gram/.{G[a_,b_]:>GramMat[a,b,krep]})/.pole[[1]]))/.OptionValue[AdRep]//Factor;
-ntem=tem;
-Do[
-If[!FreeQ[pole[[k]],Infinity],
-isp=Cases[pole[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
-If[OptionValue[deBug],Print["isp: ",isp]];
-rep=Thread@Rule[isp,isp/Subscript[x, 0]];
-ntem=DeleteCases[pole[[k]],Rule[_,Infinity]];
-rep1=If[ntem=!={},If[MemberQ[isp,ntem[[-1,1]]],Drop[ntem,-1],ntem],{}]
-(*when projecting to infinity plane, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*)
-,
-rep=pole[[k]];rep1={}];
-ntem=tem;
-If[rep=!={}&&FreeQ[rep,Subscript[x, 0]],rep=Thread@Rule[Keys[rep],Values[rep]//.Drop[rep,-1]]//Factor]//Quiet;
-If[rep=!={}&&FreeQ[rep,Subscript[x, 0]],rep=Thread@Rule[Keys[rep],Values[rep]//.rep]//Factor]//Quiet;
-If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
-If[OptionValue[deBug],Print["tem: ",tem]];
-Do[
-If[FreeQ[rep[[i]],ComplexInfinity],ntem=ntem/.rep[[i]]//Factor,ntem=(Series[ntem,Keys[rep[[i]]]->Infinity]//Normal)/.{Keys[rep[[i]]]->1}//Factor;(*Print["rep: ",rep];Print["ntem: ",ntem]*)];
-,{i,1,Length[rep]}];
-If[rep1=!={},rep1=Thread@Rule[Keys[rep1],Values[rep1]//.Drop[rep1,-1]]//Factor];
-If[rep1=!={},rep1=Thread@Rule[Keys[rep1],Values[rep1]//.rep1]//Factor];
-den=(Denominator/@(ntem))/.{Subscript[x, 0]->1}//Factor;(*the denominator*)
-tem=(Numerator/@(ntem))/.{Subscript[x, 0]->0}//Factor;
-ntem=tem/den//Factor;
-Do[
-den=(Denominator/@(ntem))/.rep1[[i]]//Factor;(*the denominator*)
-tem=(Numerator/@(ntem))/.rep1[[i]]//Factor;
-ntem=tem/den//Factor
-,{i,1,Length[rep1]}];
-,{k,2,Length[pole]}];
-Return[ntem];
-];*)
+
+Options[PolyMemberQ]={deBug->False};
+PolyMemberQ[polylist_,poly_,OptionsPattern[]]:=Catch@Module[{var,numrep,i,tem,tem1,check={}},
+	(*check whether poly is an item in polylist, they may differ by a const number*)
+	var=Variables[{poly,polylist}];
+	numrep=Reap[Do[tem=Thread@Rule[var,RandomPrime[{1000,10000},Length[var]]];If[(poly/.tem)=!=0,Sow[tem]],{i,1,3}]][[2]];
+	If[numrep=!={},numrep=numrep[[1]],Print["this polynomial is singular: ",poly]];
+	tem=Table[polylist/.numrep[[i]],{i,1,Length[numrep]}];
+	tem1=DiagonalMatrix[poly/.numrep]//Inverse;
+	check=Length[Union[#]]&/@(tem1 . tem//Transpose);
+	(*If[OptionValue[deBug],Print["tem: ",tem];Print["check: ",check]];*)
+	If[MemberQ[check,1],Throw[True],Throw[False]];
+];
 
 
 Options[AdmissiblePoleQ]={deBug->False};
-AdmissiblePoleQ[glist_,pole_,permsq_,krep_,OptionsPattern[]]:=Module[{tem,ntem},
+AdmissiblePoleQ[glist_,pole_,permsq_,krep_,OptionsPattern[]]:=Module[{tem,ntem(*,c,d*)},
 If[pole==={},
 	(*cases where glist is list of Grams of external kinematics*)
 	tem=(Times@@glist)//Gram2Poly[#,krep]&//Factor,
@@ -1563,136 +1932,10 @@ If[pole==={},
 
 If[OptionValue[deBug],Print["tem: ",tem];];
 If[NumericQ[tem],Return[False]];(*when the polynomials under square root are all perfect square, it is actually a rational letter, we don't count them here*)
-If[AnyTrue[permsq,NumericQ[tem/#//Cancel]&],Return[True],Return[False]];
+(*c=PolyMemberQ[permsq,tem];d=AnyTrue[permsq,NumericQ[#/tem//Cancel]&];
+If[c=!=d,Print["exp: ",permsq,tem]];*)
+If[PolyMemberQ[permsq,tem](*AnyTrue[permsq,NumericQ[#/tem//Cancel]&]*),Return[True],Return[False]];
 ];
-
-
-(*Options[AdmissiblePoleQ]={deBug->False};
-AdmissiblePoleQ[glist_,pole_,permsq_,krep_,OptionsPattern[]]:=Module[{tem,ntem},
-If[pole==={},
-	(*cases where glist is list of Grams of external kinematics*)
-	tem=glist//Gram2Poly[#,krep]&//Factor,
-	tem=ApplyPoleToGram[pole,glist,krep]/.{Subscript[x,_]->1};
-];
-
-ntem=DeleteCases[tem,_?PerfectSquareQ];
-If[OptionValue[deBug],Print["tem: ",tem];Print["ntem: ",ntem]];
-If[ntem==={},Return[False]];(*when the polynomials under square root are all perfect square, it is actually a rational letter, we don't count them here*)
-If[And@@Table[AnyTrue[permsq,NumericQ[ntem[[i]]/#//Cancel]&],{i,1,Length[ntem]}],Return[True],Return[False]];
-];*)
-
-
-(*Options[ApplyPolesToAlgLetter]={Sector->{},AdRep->{},deBug->False,PermSq->{},PathDis->True};
-ApplyPolesToAlgLetter[poles_,letters_,reform_,krep_,OptionsPattern[]]:=Module[{start,polepath,letterpath,kletters={},tem,ntem,glist,Glist,ll,nletters={},sletters={},var,rep,rep1,gr,ga,isp,pos,path},
-start=SessionTime[];
-Monitor[
-Do[
-letterpath=letters[[i,3]];
-ga=(Cases[letters[[i,1]],Power[z_,1/2]->z,Infinity]//DeleteDuplicates)[[1]];(*algebraic part of letter*)
-gr=(letters[[i,1]][[1]]//Numerator)/.{Power[_,1/2]->0};(*rational part of letter*)
-tem=({gr,ga}//Cases[#,_G,Infinity]&)/.{G[a_,b_]:>GramMat[a,b,krep]};
-If[FreeQ[tem,x],
-ntem=SpecialSimplify[({gr,ga}//Gram2Poly[#,krep]&)//Factor];
-If[((ntem[[1]]-ntem[[2]]//Factor)===0)||((ntem[[1]]+ntem[[2]]//Factor)===0),Continue[]];
-glist=Cases[{ga},_G,Infinity]//DeleteDuplicates;
-ll=(Length[#[[1]]]&/@glist);
-Glist=Select[reform,MemberQ[ll,Length[#[[1,1]]]]&];
-pos=FindGram[glist,Glist[[All,1]],krep];
-If[!FreeQ[pos,{}],Continue[](*Message[FindGram::warning,Gram]*)];
-AppendTo[kletters,{Log[(ntem[[1]]+Sqrt[ntem[[2]]])/(ntem[[1]]-Sqrt[ntem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&],letters[[i,1]],letters[[i,4]]}];
-(*If[OptionValue[deBug],Print["time consuming: ",SessionTime[]-start]];*)
-Continue[],
-glist=Cases[{ga},_G,Infinity]//DeleteDuplicates;
-(*If[OptionValue[deBug],Print["glist: ",glist]];*)
-ll=(Length[#[[1]]]&/@glist);
-Glist=Select[reform,MemberQ[ll,Length[#[[1,1]]]]&];
-pos=FindGram[glist,Glist[[All,1]],krep];
-If[!FreeQ[pos,{}],Continue[](*Message[FindGram::warning,Gram]*)];
-path=(Union@@(Glist[[#,3]]))&/@pos;(*paths for grams in the square root*)
-If[OptionValue[PathDis]&&PathsDistance[path[[1]],path[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]];
-ntem=GramMat[#[[1]],#[[2]],krep]&/@glist;
-pos=Table[If[FreeQ[ntem[[k]],x],{k}],{k,1,Length[ntem]}]//DeleteCases[#,Null]&;(*delete Gram which doesn't depend on Baikov variables*)
-path=Delete[path,pos];
-(*glist=Delete[glist,pos];*)
-(*If[OptionValue[deBug],Print["time consuming: ",SessionTime[]-start]];*)
-(*If[OptionValue[deBug],Print["path: ",path];Print["glist: ",glist]];*)
-];
-If[OptionValue[PermSq]==={},
-Do[
-polepath=poles[[j,2]]//SortBy[#,Length]&;
-(*polepath=RefinedPolePath[glist,poles[[j]],poles,krep]//SortBy[#,Length]&;*)(*some poles are special and they can appear in subsectors*)
-If[AllTrue[polepath,ContainsAny[#,OptionValue[Sector]]&],(*if there is any element in the path, it means this pole only appear in subsectors, so if we only want pole appearing top sector they will be discarded*)
-Continue[],
-If[AnyTrue[polepath,(*MemberQ[letterpath[[2]],#]&*)(MemberQ[Join[{letterpath[[1]]},letterpath[[2]]],#])&],
-(*If[!AnyTrue[path,IntersectingQ[#,polepath]&],Continue[]];*)
-If[!AllTrue[path,CompatiblePathQ[#,polepath,TopOnly->True]&],Continue[]];
-tem=SpecialSimplify[({gr,ga}/.{G[a_,b_]:>Det[GramMat[a,b,krep]/.poles[[j,1,1]]]})//Factor];
-(*If[OptionValue[deBug],Print["gr ga: ",{gr,ga}]];*)
-Do[
-If[!FreeQ[poles[[j,1,k]],Infinity],
-isp=Cases[poles[[j,1,k]],Subscript[x,_],Infinity]//DeleteDuplicates;
-(*If[OptionValue[deBug],Print["isp: ",isp]];*)
-rep=Thread@Rule[isp,isp/Subscript[x, 0]];
-ntem=DeleteCases[poles[[j,1,k]],Rule[_,Infinity]];
-rep1=If[ntem=!={},Drop[ntem,-1],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*),
-rep=poles[[j,1,k]];rep1={}];
-(*If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
-If[OptionValue[deBug],Print["tem: ",tem]];*)
-tem=SpecialSimplify[tem,AdRep->Join[rep,{Subscript[x, 0]->0},rep1,{OptionValue[AdRep]}]];
-,{k,2,Length[poles[[j,1]]]}];
-If[((tem[[1]]-tem[[2]]//Factor)===0)||((tem[[1]]+tem[[2]]//Factor)===0),Continue[]];
-AppendTo[nletters,{Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&],letters[[i,1]],poles[[j,1]],letters[[i,4]]}];
-]
-]
-,{j,1,Length[poles]}],
-(*In this case, we use additional information to constrain the form*)
-Do[
-polepath=poles[[j,2]]//SortBy[#,Length]&;
-(*polepath=RefinedPolePath[glist,poles[[j]],poles,krep]//SortBy[#,Length]&;*)(*some poles are special and they can appear in subsectors*)
-If[!AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],
-Continue[],
-If[False(*!AllTrue[path,CompatiblePathQ[#,polepath]&]*),
-Continue[],
-(*If[OptionValue[deBug],Print["time consuming: ",SessionTime[]-start]];*)
-tem=SpecialSimplify[({gr,ga}/.{G[a_,b_]:>Det[GramMat[a,b,krep]/.poles[[j,1,1]]]})//Factor];
-(*If[OptionValue[deBug],Print["gr ga: ",{gr,ga}]];*)
-Do[
-If[!FreeQ[poles[[j,1,k]],Infinity],
-isp=Cases[poles[[j,1,k]],Subscript[x,_],Infinity]//DeleteDuplicates;
-(*If[OptionValue[deBug],Print["isp: ",isp]];*)
-rep=Thread@Rule[isp,isp/Subscript[x, 0]];
-ntem=DeleteCases[poles[[j,1,k]],Rule[_,Infinity]];
-rep1=If[ntem=!={},Drop[ntem,-1],{}](*when projecting to infinity space, the polynomial is homogeneous so the last variable will certainly be cancelled from expression, we don't need its replacement*),
-rep=poles[[j,1,k]];rep1={}];
-(*If[OptionValue[deBug],Print["rep: ",rep];Print["rep1: ",rep1]];
-If[OptionValue[deBug],Print["tem: ",tem]];*)
-tem=SpecialSimplify[tem,AdRep->Join[rep,{Subscript[x, 0]->0},rep1,{OptionValue[AdRep]}]];
-,{k,2,Length[poles[[j,1]]]}];
-If[((tem[[1]]-tem[[2]]//Factor)===0)||((tem[[1]]+tem[[2]]//Factor)===0),Continue[]];
-AppendTo[nletters,{Log[(tem[[1]]+Sqrt[tem[[2]]])/(tem[[1]]-Sqrt[tem[[2]]])//Factor//Map[Collect[#,Power[_,1/2],Factor]&,#,2]&],letters[[i,1]],poles[[j,1]],letters[[i,4]]}];
-(*If[OptionValue[deBug],Print["time consuming: ",SessionTime[]-start]];*)
-]
-]
-,{j,1,Length[poles]}]]
-,{i,1,Length[letters]}],i];
-Return[{nletters//DeleteDuplicatesBy[#,First]&,kletters//DeleteDuplicatesBy[#,First]&,sletters}];
-];*)
-
-
-(*Options[AllSectorAlgLetter]={deBug->False,PermSq->{},PathDis->True};
-AllSectorAlgLetter[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{l,tem,ntem,result={},spresult={}},
-l=Length[algletter];
-Print["totally ",l," sectors need to be analyzed"];
-Do[
-If[OptionValue[deBug],Print["subset: ",algletter[[i,2]]]];
-tem=ApplyPolesToAlgLetter[poles,algletter[[i,1]],reform,krep,PermSq->OptionValue[PermSq],PathDis->OptionValue[PathDis],deBug->True];
-ntem=Flatten[tem[[{1,2}]],1]//DeleteDuplicatesBy[#,First]&;
-AppendTo[result,{ntem,algletter[[i,2]]}];
-AppendTo[spresult,{tem[[3]],algletter[[i,2]]}]
-,{i,1,Length[algletter]}];
-If[OptionValue[deBug],Return[{result,spresult}]];
-Return[result];
-];*)
 
 
 RefinedPolePath[gram_,pole_,poles_,krep_]:=Module[{start,tem,ntem,int,path={}},
@@ -1719,13 +1962,36 @@ var=Variables[exp];
 If[Length[var]==1&&Length[exp]==0,Return[True],Return[False]];
 ];
 
+TDivisible[list_,targetlist_]:=Module[{intexp,i},
+	intexp=IntegerExponent[Abs[list],Abs[#]]&/@targetlist;
+	Do[
+	 If[Length[intexp[[i]]//Union]!=1,Return[False]];
+	,{i,1,Length[intexp]}];
+	intexp=intexp[[All,1]];
+	If[Length@Union[list/Product[Power[targetlist[[i]],intexp[[i]]],{i,1,Length[targetlist]}]]!=1,Return[False]];
+	Return[True];
+]
+
 Options[SelectAlgLetter]={deBug->False};
-SelectAlgLetter[alg_,rl_,OptionsPattern[]]:=Module[{tem,int,select={}},
+SelectAlgLetter[alg_,rl_,OptionsPattern[]]:=Module[{tem,tem1,int,select={},var,numrep,rlnum,temnum,pos},
+var=Variables[rl];
+numrep=Table[Thread@Rule[var,RandomPrime[{10^5,10^6},Length[var]]],{i,1,4}];(*we will pre-select by numerical test*)
+rlnum=Table[rl/.numrep[[i]],{i,1,4}]//Transpose;
 Do[
-	tem=FactorList[(Numerator[#[[1]]]*Denominator[#[[1]]]&[alg[[i]]])//Expand][[All,1]]//DeleteCases[#,_?NumericQ]&;
+	tem=(Numerator[#[[1]]]*Denominator[#[[1]]]&[alg[[i]]])//Expand;
+	temnum=Table[tem/.numrep[[i]],{i,1,4}];
+	tem1=Mod[temnum,#]&/@rlnum;
+	If[OptionValue[deBug],Print["tem1: ",tem1]];
+	If[Not@MemberQ[tem1,{0,0,0,0}],
+		Continue[],(*if numeric test fails, continue*)
+		pos=Position[tem1,{0,0,0,0},1]//Flatten;
+		If[OptionValue[deBug],Print["pos: ",pos]];
+		If[Not@TDivisible[temnum,rlnum[[pos]]],Continue[],AppendTo[select,alg[[i]]]]
+	];
+	(*tem=FactorList[tem][[All,1]]//DeleteCases[#,_?NumericQ]&;
 	int=RIntersection[tem,rl];
 	If[OptionValue[deBug]==True,Print["int: ",int];Print["tem: ",tem]];
-	If[Complement[tem,int[[1]]]=!={},Continue[],AppendTo[select,alg[[i]]]];
+	If[Complement[tem,int[[1]]]=!={},Continue[],AppendTo[select,alg[[i]]]];*)
 ,{i,1,Length[alg]}];
 Return[select];
 ];
@@ -1745,57 +2011,36 @@ MyContainsAny[a_,list_]:=If[AnyTrue[list,ContainsAll[a,#]&],True,False];
 
 
 Options[MergePoles]={deBug->False};
-MergePoles[poleslist_,OptionsPattern[]]:=Module[{rep1,rep2,tem1,tem2,isp,int,intv},
+MergePoles[poleslist_,OptionsPattern[]]:=Module[{rep1,rep2,tem1,tem2,ntem2,isp,int,intv,tuple,k},
 	(*poleslist should be in the form {{{Subscript[x, 1]->0,Subscript[x, 2]->0,...},{Subscript[x, 6]->Infinity,...}},{...}}*)
-	rep1=poleslist[[All,1]]//Flatten//DeleteDuplicates//Sort;
-	tem1=Cases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//Flatten//DeleteDuplicates;(*Note that the second part has order so we can't sort them*)
-	tem2=DeleteCases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//DeleteDuplicates;
-	If[Length[tem2]==0,(*if there are no infinity poles*)
-		rep2=tem1,
+	rep1=poleslist[[All,1]]//Flatten//DeleteDuplicates//Sort;(*poles can be merged must have the same first part since they come from the same sector*)
+	tem1=Cases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//DeleteDuplicates;(*Note that the second part has order so we can't sort them*)
+	tem2=DeleteCases[poleslist[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//DeleteDuplicates;(*poles with infinity will be pre-processed*)
+	If[Length[tem2]!=0,
 		(*if there are infinity poles*)
-		tem2=Table[If[Length[tem2[[i]]]==1,Append[tem2[[i]],Rule[tem2[[i,1,1]],0]],tem2[[i]]],{i,1,Length[tem2]}];(*complete some single poles like {x->Infinity} to {x->Infinity,x->0}*)
-		If[Length[tem2]==1,(*if there is only one infinity pole map*)
-			isp=Cases[tem2,Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
-			rep2=Join[tem1,{Thread@Rule[isp,isp/Subscript[x, 0]],Subscript[x, 0]->0},DeleteCases[tem2[[1]],Rule[_,Infinity]]//Delete[#,-1]&],
-			(*if there are more than one infinity pole map*)
-			isp=(Cases[#,Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates)&/@tem2;
-			tem2=(DeleteCases[#,Rule[_,Infinity]]&)/@tem2//Flatten;(*the replacement rule after taking x0 to 0*)
-			int=Reap[
-					Do[
-						Do[
-							intv=Intersection[isp[[i]],isp[[j]]];
-							If[intv=!={},Sow[intv]]
-						,{j,i+1,Length[isp]}]
-					,{i,1,Length[isp]}]
-			][[2]];
-			If[int=!={},int=int//Flatten//DeleteDuplicates];
-			If[OptionValue[deBug],Print["int: ",int];Print["isp: ",isp]];
-			isp=isp//Flatten//DeleteDuplicates;
-			rep2=Join[tem1,{Thread@Rule[isp,isp/Subscript[x, 0]],Subscript[x, 0]->0},DeleteCases[tem2,_?(MemberQ[int,Keys[#]]&)],(Thread@Rule[int,int/.tem2])]//Delete[#,-1]&;
-		]
+		tem2=Table[If[Length[tem2[[k]]]==1,Append[tem2[[k]],Rule[tem2[[k,1,1]],0]],tem2[[k]]],{k,1,Length[tem2]}];(*complete some single poles like {x->Infinity} to {x->Infinity,x->0}*)
+		ntem2={};
+		Do[
+			isp=Cases[tem2[[k]],Rule[Subscript[x,a_],Infinity]->Subscript[x,a],Infinity]//DeleteDuplicates;
+			AppendTo[ntem2,Join[{Thread@Rule[isp,isp/Subscript[x, 0]],Subscript[x, 0]->0},DeleteCases[tem2[[k]],Rule[_,Infinity]]//Delete[#,-1]&]]
+		,{k,1,Length[tem2]}];
+		tem1=Join[tem1,ntem2]
 	];
-	Return[{rep1,rep2}];
-	(*result=Table[
-		tem1=remain[[edge[[i]]]];
-		tem=DeleteCases[tem1[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//ReverseSortBy[#,Length]&;
-		tem2=Cases[tem1[[All,2]],_?(FreeQ[#,Rule[_,Infinity]]&)]//Flatten//DeleteDuplicates;
-		If[tem==={},(*if there are no infinity poles*)
-			{tem1[[All,1]]//Flatten//DeleteDuplicates,tem2//Flatten//DeleteDuplicates},
-			{Join[tem1[[All,1]],{Thread@Rule[Keys[tem2],Values[tem2]//.tem2//Factor]}]//Flatten//DeleteDuplicates,If[Length[tem]==1,tem//Flatten,Riffle[tem[[1]],tem[[2]]]//DeleteDuplicates]}
-		]
-		,{i,1,Length[edge]}];
-		(*here we define how to merge two compatible pole*)
-	Return[Join[remain[[Complement[Range[Length[remain]],edge//Flatten//DeleteDuplicates]]],result]//DeleteDuplicates];
-	(*we include those poles which are not compatible to any other poles separately*)
-	(*the final data form will be {{{a->0,b->0},{c->1}},{...},...}*)*)
+	(*due to that the order of replacement is important, different orders may have different results, we give all possible order of two poles that can be merged*)
+	tuple=Permutations[Range[Length[tem1]]];
+	rep2=tem1[[#]]&/@tuple;(*all possible order*)
+	Return[Table[{rep1,rep2[[k]]//Flatten[#,1]&},{k,1,Length[rep2]}]];
+	(*the final data form will be like {{{Subscript[x, 1]->0,Subscript[x, 2]->0},{Subscript[x, 3]->s,Subscript[x, 4]->t}},{{Subscript[x, 1]->0,Subscript[x, 2]->0},{{Subscript[x, 3]->Subscript[x, 3]/Subscript[x, 0],Subscript[x, 4]->Subscript[x, 4]/Subscript[x, 0]},Subscript[x, 3]->s,Subscript[x, 4]->t}},...}*)
 ];
 
 
-Options[ApplyPoleToVar]={deBug->True};
-ApplyPoleToVar[poles_,var_]:=Module[{tem},
+Options[ApplyPoleToVar]={deBug->False};
+ApplyPoleToVar[poles_,var_]:=Catch@Module[{isp,tem,i},
+	isp=Keys/@poles[[All,2]];
+	Do[If[(Not@ContainsAll[var,isp[[i]]])&&(Not@ContainsNone[var,isp[[i]]]),Throw["forbidden"]],{i,1,Length[isp]}];
 	tem=poles//Flatten//DeleteDuplicates//GatherBy[#,(Last[#]===Infinity)&]&;
-	If[Length[tem]==1,Return[var/.tem]];
-	Return[Table[If[MemberQ[Keys[tem[[2]]],var[[i]]],g[var[[i]]/.tem[[1]]],var[[i]]/.tem[[1]]],{i,1,Length[var]}]];
+	If[Length[tem]==1,Throw[var/.tem[[1]]//Factor]];
+	Throw[Table[If[MemberQ[Keys[tem[[2]]],var[[i]]],g[var[[i]]/.tem[[1]]],var[[i]]/.tem[[1]]]//Factor,{i,1,Length[var]}]];
 ];
 
 
@@ -1825,48 +2070,18 @@ FindPoleMaps[poles_,var_,sector_:{},OptionsPattern[]]:=Module[{alist={},xl,tem,a
 		,{i,1,Length[tem]}]
 	][[2]];
 	If[atem=!={},atem=atem[[1]]];
+	If[OptionValue[deBug],Print["atem: ",atem]];
 	(*then collect all different maps and remove duplicate cases*)
-	atem=GatherBy[atem,First];
+	atem=GatherBy[atem//DeleteCases[#,{"forbidden",_}]&,First];
 	Return[atem[[All,1,2]]];(*for each group, we only need the first element, the remaining map will give the same results*)
-	
-	(*max=poles[[3,-1]]//Length;(*maximal length of clique*)
-	atem=tem;
-	While[l<=max,
-		(*l is number of poles we choose to form a cover. We start from the 2-pole cover*)
-		alisttem={};
-		pos={};
-		Do[
-			If[MyContainsAny[atem[[j]],alisttem],Continue[]];(*if this term is already a cover of the covers we have found*)
-			If[!AllTrue[poles[[1]][[atem[[j]]]],CompatiblePoleQ[#,xl]&],AppendTo[pos,j];Continue[]];(*if in the pole map, the required constraint not be satisfied*)
-			n=Length[atem[[j]]];(*length of this clique*)
-			If[n==l,(*if the length of clique equals to the number n of the n-pole cover we want*)
-				If[ContainsAll[Keys[poles[[1]][[atem[[j]]]]//Flatten],var],AppendTo[alisttem,atem[[j]]]],
-				subset=Subsets[atem[[j]],{l,n}];(*consider all its subset with at least length l*)
-				Do[
-					If[ContainsAll[Keys[poles[[1]][[subset[[k]]]]//Flatten],var],
-						AppendTo[alisttem,subset[[k]]];Break[](*if one already finds a subset which is a cover, then it is not necessary to search the rest of them*)
-					]
-				,{k,1,Length[subset]}]
-			]
-		,{j,1,Length[atem]}];
-		atem=Delete[atem,List/@pos];(*remove candidates that are not compatible with constraints*)
-		If[alisttem=!={},
-			atem=DeleteCases[atem,_?(MyContainsAny[#,alisttem]&)];(*remove those terms that is already a cover of the covers we have found*)
-		];
-		l=l+1;
-		alist=Join[alist,alisttem]//DeleteDuplicates;
-		If[OptionValue[deBug],Print["length: ",l-1," alisttem: ",alisttem]];
-		atem=DeleteCases[atem,_?(Length[#]<l&)];
-	];*)
-	(*alist is all the maps we find for the set var*)
-	(*then we merge multiple pole map to single pole map*)
-	(*Return[Table[If[Head[alist[[i]]]===List,{MergePoles[poles[[1]][[alist[[i]]]]],alist[[i]]},{poles[[1,alist[[i]]]],{alist[[i]]}}],{i,1,Length[alist]}]];*)
+
 	Return[alist];
 ];
 
 
 Options[ApplyPolesToAlgLetter1]={Sector->{},AdRep->{},deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True,NoPathInfo->True};
-ApplyPolesToAlgLetter1[opoles_,letters_,reform_,krep_,OptionsPattern[]]:=Module[{start,poles,polepath,letterpath,kletters={},tem,ntem,glist,glistd,Glist,ll,nletters={},sletters={},var,assoc,rep,rep1,gr,ga,isp,pos,path,dis},
+ApplyPolesToAlgLetter1[opoles_,letters_,reform_,krep_,OptionsPattern[]]:=Catch@Module[{start,poles,polepath,letterpath,kletters={},tem,ntem,glist,glistd,Glist,ll,nletters={},sletters={},var,assoc,rep,rep1,gr,ga,isp,pos,path,dis},
+If[letters==={},Return[{nletters,kletters,sletters}]];(*when the input is null, return empty set*)
 start=SessionTime[];
 (*first find all possible pole maps for the algebraic letters*)
 tem=Reap[
@@ -1874,12 +2089,12 @@ tem=Reap[
 		Sow[(letters[[i,1]]//Cases[#,_G,Infinity]&//DeleteDuplicates)/.{G[a_,b_]:>GramMat[a,b,krep]}//Cases[#,Subscript[x,_],Infinity]&//DeleteDuplicates//Sort];(*all Baikov variables involved in an algebraic letter*)		
 	,{i,1,Length[letters]}]
 ][[2]];
-If[var=!={},var=tem[[1]]//DeleteDuplicates];
+If[tem=!={},var=tem[[1]]//DeleteDuplicates,var={}];
 assoc=Association[Table[Rule[var[[i]],FindPoleMaps[opoles,var[[i]]]],{i,1,Length[var]}]];(*the association that associate a baikov variable list to a list of pole maps*)
-If[OptionValue[deBug],Print["all poles map found ",SessionTime[]-start];Print[Keys[assoc]]];
+If[OptionValue[deBug],PrintTemporary["all poles map found ",SessionTime[]-start];PrintTemporary[Keys[assoc]]];
 
 Do[
-	If[OptionValue[deBug],Print[SessionTime[]-start]];
+	If[OptionValue[deBug],PrintTemporary[SessionTime[]-start]];
 	(*letterpath=letters[[i,3]];*)
 	ga=((Cases[letters[[i,1]],Power[z_,1/2]->z,Infinity]//DeleteDuplicates)[[1]])/.{G[{},{}]->1};(*algebraic part of letter*)
 	gr=(letters[[i,1]][[1]]//Numerator)/.{Power[_,1/2]->0};(*rational part of letter*)
@@ -1887,108 +2102,35 @@ Do[
 	var=Cases[tem,Subscript[x,_],Infinity]//DeleteDuplicates//Sort;(*get all Baikov variables involved in this letter*)
 	glist=Cases[{ga},_G,Infinity]//DeleteDuplicates;(*grams under square root*)
 	glistd=Cases[{letters[[i,2]]},_G,Infinity]//DeleteDuplicates;(*grams corresponding to the multiplication of numerator and denominator of algebraic letter*)
-	If[OptionValue[deBug],Print["ga: ",ga];Print["gr: ",gr];Print["var: ",var]];
-	
-	(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-	(*If[OptionValue[PathDis],
-		var=glist/.{G->List}//Variables;(*the variables involved*)
-		If[OptionValue[deBug],Print["glist: ",glist];Print["glistd: ",glistd]];
-		ll=(Length[#[[1]]]&/@Join[glist,glistd]);
-		Glist=Select[reform,(MemberQ[ll,Length[#[[1,1]]]]&&ContainsAll[var,Variables[#[[1,1]]]])&];(*select possible relevant Gram from the whole list*)
-		pos=FindGram[Join[glist,glistd],Glist[[All,1]],krep];
-		If[!FreeQ[pos,{}],Continue[]];
-		(*if one gram is not in above list, then we don't use this ansatz*)
-		(*------------------find the path of grams which are used to construct this letter----------------*)
-		If[Abs[letters[[i,4]]]==2,
-			(*second type construction: 1/(ab)*)
-			path=(Union@@(Glist[[#,3]]))&/@Drop[pos,Length[glist]],
-			(*first type construction: 1/Sqrt[ab]*)
-			path=(Union@@(Glist[[#,3]]))&/@Take[pos,Length[glist]]
-		];
-		(*------------------find the path of grams which are used to construct this letter----------------*)
-		If[OptionValue[deBug],Print["pos: ",pos];Print["path: ",path]];
-	];*)
-	(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-	
-	If[OptionValue[deBug],Print[SessionTime[]-start]];
+	If[OptionValue[deBug],PrintTemporary["ga: ",ga];PrintTemporary["gr: ",gr];PrintTemporary["var: ",var]];
+		
+	If[OptionValue[deBug],PrintTemporary[SessionTime[]-start]];
 	If[var==={},
-		(*when this letter consists only of pure kinematics gram*)
-		
-		(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-		(*If[OptionValue[PathDis]&&OptionValue[KinePath],
-			(*consider two different types of letters separately*)
-			(*Print["letter: ",letters[[i]]];*)
-			If[Abs[letters[[i,4]]]==1,
-				dis=If[Length[path]==1,0,PathsDistance[path[[1]],path[[2]]]];
-				If[dis>2,AppendTo[sletters,letters[[i]]];Continue[],If[dis==2&&!GramPCQ[glist],(*Print["letter: ",letters[[i]]];*)AppendTo[sletters,letters[[i]]];Continue[]]];
-			];
-			If[Abs[letters[[i,4]]]==2,
-				dis=PathsDistance[path[[1]],path[[2]]];
-				If[dis>2,AppendTo[sletters,letters[[i]]];Continue[],If[dis==2&&!GramPCQ[glist],(*Print["letter: ",letters[[i]]];*)AppendTo[sletters,letters[[i]]];Continue[]]];
-			]
-		];*)
-		(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-		
+		(*when this letter consists only of pure kinematics gram*)		
 		If[!AdmissiblePoleQ[glist,{},OptionValue[PermSq],krep],Continue[],AppendTo[kletters,{letters[[i,1]],{},letters[[i,4]]}]];
 		Continue[],
 		
-		(*when this letter consists of gram which is not free from loop moemnta*)
-		(*If[OptionValue[PathDis]&&PathsDistance[path[[1]],path[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]];*)
-		
-		(*-------------------the following is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-		(*If[OptionValue[PathDis],
-			(*consider two different types of letters separately*)
-			If[Abs[letters[[i,4]]]==1,
-				(*note that there is a special case where one Gram is G[{},{}], in this case path has only one element.*)
-				If[Length[path]==1,dis=0,dis=PathsDistance[path[[1]],path[[2]]]],
-				If[Abs[letters[[i,4]]]==2,dis=PathsDistance[path[[1]],path[[2]]];]
-			];
-			If[OptionValue[LoopPath]&&dis>1,
-				AppendTo[sletters,letters[[i]]];Continue[],
-				If[dis>2,AppendTo[sletters,letters[[i]]];Continue[],If[dis==2&&!GramPCQ[glist],AppendTo[sletters,letters[[i]]];Continue[]]]
-			];
-			(*If[letters[[i,4]]==1&&PathsDistance[path[[1]],path[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]];
-			If[letters[[i,4]]==2&&PathsDistance[{letterpath[[1]]},letterpath[[2]]]>1,AppendTo[sletters,letters[[i]]];Continue[]]*)
-		];*)
-		(*-------------------above is a historical part, we have abandoned putting on the pathdistance constraint for the letters----------------*)
-		
-		(*ntem=GramMat[#[[1]],#[[2]],krep]&/@glist;
-		pos=Table[If[FreeQ[ntem[[k]],x],{k}],{k,1,Length[ntem]}]//DeleteCases[#,Null]&;(*delete Gram which doesn't depend on Baikov variables*)
-		path=Delete[path,pos];*)
-		
 		pos=assoc[var];
-		poles=Table[If[Head[pos[[i]]]===List,{MergePoles[opoles[[1]][[pos[[i]]]]],pos[[i]]},{MergePoles[{opoles[[1,pos[[i]]]]}],{pos[[i]]}}],{i,1,Length[pos]}];(*the pole maps needed*)
+		poles=Table[If[Head[pos[[i]]]===List,{#,pos[[i]]}&/@MergePoles[opoles[[1]][[pos[[i]]]]],{#,{pos[[i]]}}&/@MergePoles[{opoles[[1,pos[[i]]]]}]],{i,1,Length[pos]}]//Flatten[#,1]&;(*the pole maps needed*)
 	];
+	(*Print["var: ",var];
+	If[var===(Subscript[x,#]&/@Range[11]),Print[glist];Throw[poles]];(*deBug use only//////////////////////////////////////////////*)*)
 	If[OptionValue[PermSq]==={},
-		(*in this case, we will search letters by relations between poles and letter ansatz. This approach is not preferred now*)
-		Do[
-			polepath=poles[[j,2]]//SortBy[#,Length]&;
-			(*polepath=RefinedPolePath[glist,poles[[j]],poles,krep]//SortBy[#,Length]&;*)(*some poles are special and they can appear in subsectors*)
-			If[AllTrue[polepath,ContainsAny[#,OptionValue[Sector]]&],(*if there is any element in the path, it means this pole only appear in subsectors, so if we only want pole appearing top sector they will be discarded*)
-				Continue[],
-				If[AnyTrue[polepath,(*MemberQ[letterpath[[2]],#]&*)(MemberQ[Join[letterpath[[1]],letterpath[[2]]],#])&],
-				(*If[!AnyTrue[path,IntersectingQ[#,polepath]&],Continue[]];*)
-					If[!AllTrue[path,CompatiblePathQ[#,polepath,TopOnly->True]&],Continue[]];
-					AppendTo[nletters,{letters[[i,1]],poles[[j,1]],letters[[i,4]]}];
-				]
-			]
-		,{j,1,Length[poles]}],
+		(*in this case, we will give a warning messge. This approach is not used now*)
+		Message[ApplyPolesToAlgLetter1::permsq];
+		Throw[{{},{},{}}]
+		,
 		(*In this case, we use information of square roots to constrain the form*)
 		Do[
 			If[!AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],
 				Continue[],
-				If[!OptionValue[NoPathInfo],
-					(*if we put on the information of pole's path*)
-					polepath=poles[[j,2]]//SortBy[#,Length]&;
-					If[!AllTrue[path,CompatiblePathQ[#,polepath]&],Continue[]]
-				];
 				AppendTo[nletters,{letters[[i,1]],poles[[j,1]],letters[[i,4]]}]
 			]
 		,{j,1,Length[poles]}]
 	];
-	If[OptionValue[deBug],Print[SessionTime[]-start]]
+	If[OptionValue[deBug],PrintTemporary[SessionTime[]-start]]
 ,{i,1,Length[letters]}];
-Return[{nletters,kletters,sletters}];
+Throw[{nletters,kletters,sletters}];
 ];
 
 
@@ -2089,18 +2231,12 @@ Do[
 	(*If[OptionValue[deBug],Print["glist: ",glist]];*)
 	(*If[OptionValue[deBug],Print["gram: ",glist[[1]]]];*)
 	If[OptionValue[PermSq]==={},
-		ll=(Length[#[[1]]]&/@glist);
-		Glist=Select[reform,MemberQ[ll,Length[#[[1,1]]]]&];
-		pos=FindGram[glist,Glist[[All,1]],krep];
-		path=(Union@@(Glist[[#,3]]))&/@pos;(*paths for grams in the square root*)
-		Do[
-			polepath=Complement[xl,Keys[Flatten[opoles[[1,j]]]]]//ReverseSort;
-			If[IntersectingQ[path[[1]],polepath],AppendTo[adpole,opoles[[1,j]]]];
-			(*get all admissible poles that can be substituted into the gram matrix*)
-		,{j,1,Length[opoles[[1]]]}],
+		Message[ApplyPolesToAlgLetter2::permsq];
+		Throw[{}]
+		,
 		(*In this case, we use additional information to constrain the form*)
 		pos=assoc[var];
-		poles=Table[If[Head[pos[[i]]]===List,{MergePoles[opoles[[1]][[pos[[i]]]]],pos[[i]]},{MergePoles[{opoles[[1,pos[[i]]]]}],{pos[[i]]}}],{i,1,Length[pos]}];(*the pole maps needed*)
+		poles=Table[If[Head[pos[[i]]]===List,{#,pos[[i]]}&/@MergePoles[opoles[[1]][[pos[[i]]]]],{#,{pos[[i]]}}&/@MergePoles[{opoles[[1,pos[[i]]]]}]],{i,1,Length[pos]}]//Flatten[#,1]&;(*the pole maps needed*)
 		Do[
 			If[AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],AppendTo[adpole,poles[[j,1]]]]
 		,{j,1,Length[poles]}]
@@ -2236,10 +2372,10 @@ Return[Log/@(nlist[[All,2]])];
 ToRational[alg_]:=Times@@NumeratorDenominator[alg[[1]]]//Expand//Factor;
 
 GenerateNumReal[sq_,var_]:=Module[{rep,tem,k=1},
-rep=Thread@Rule[var,RandomChoice[{1,-1}]*RandomPrime[{100,1000},Length[var]]];
+rep=Thread@Rule[var,RandomChoice[{1,-1}]*RandomPrime[{10^5,10^6},Length[var]]];
 tem=sq/.{Power[a_,1/2]:>a};
 While[Length[Values[rep]//Union]<Length[var]||((tem/.rep)<0&&k<1000),
-rep=Thread@Rule[var,RandomChoice[{1,-1}]*RandomPrime[{100,1000},Length[var]]];
+rep=Thread@Rule[var,RandomChoice[{1,-1}]*RandomPrime[{10^5,10^6},Length[var]]];
 k=k+1;
 ];
 Return[rep];
@@ -2266,7 +2402,7 @@ sq=Cases[gr[[i]],Power[_,1/2],Infinity]//DeleteDuplicates;
 If[sq==={},Continue[]];
 tem=gr[[i]]//SortBy[#,LeafCount]&;
 If[OptionValue[deBug],Print["square root: ",Short[sq,20]];Print["length: ",Length[tem]]];
-rep=Table[GenerateNumReal[sq[[1]],var],{i,1,4}];
+rep=Table[GenerateNumReal[sq[[1]],var],{i,1,5}];
 pos=Commonest[SearchIndepLetterNum[tem,#]&/@rep][[1]];
 AppendTo[ind,tem[[pos]]]
 ,{i,1,Length[gr]}];
