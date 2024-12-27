@@ -1281,7 +1281,7 @@ ExtractLoopOrder[rep_]:=Module[{list,listk,pos,ext,loop},
 Options[GetBaikovMatRep] = {"ExcVar" -> {}, "looporder"-> 2, "ForceAdd" -> 0, deBug-> False}; 
 
 GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
-    Module[{intv, l, k = 1, tem, pos, temp, res = {},flag},
+    Module[{intv, l, k = 1, tem, pos, temp, res = {}, flag, len, flag1, c},
         intv = Complement[Table[i, {i, 1, n}], Join[var, OptionValue[
             "ExcVar"]]] // ReverseSort;
         intv = Subscript[x, #]& /@ intv;
@@ -1308,13 +1308,16 @@ GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
                         AppendTo[res, tem[[j]]],
                         If[flag!=0,
                             AppendTo[res, tem[[j]]],
+                            len=Length[res];
+                            flag1=0;
 	                        Do[
 	                            If[OptionValue[deBug],Print["res: ",res[[All,1]]]];
 	                            If[ContainsAll[res[[c,1]],temp[[j]]],
-	                                Break[],
-	                                AppendTo[res, tem[[j]]]
+	                                flag1=1;Break[],
+	                                Continue[]
 	                            ]
-	                        ,{c,1,Length[res]}]
+	                        ,{c,1,len}];
+	                        If[flag1==0,AppendTo[res,tem[[j]]]]
 	                    ]
                     ];
                     If[tem[[j, 2, 2]] === 0,
