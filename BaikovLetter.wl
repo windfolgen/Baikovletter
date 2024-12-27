@@ -1180,11 +1180,16 @@ PolyDim[exp_]:=Module[{var,rep},
 
 
 Options[RFindInstance]={deBug->False};
-RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,result,k,m=1,flag,count=1},
+RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,result,k,a,m=1,flag,count=1},
 	pow=Exponent[poly,#]&/@var;
 	list=(Partition[Riffle[pow,var],2]//SortBy[#,First]&)[[All,2]];(*sort the variables by its power*)
 	(*Print["list: ",list];*)
 	If[Length[var]<=2,Return[FindInstance[{poly==0,var[[1]]!=0},var,domain,n]]];
+	pow=Exponent[poly/.Thread@Rule[var,var*a],a];
+	If[pow<=2,(*if the total power of polynomial is less or equal to 2, it usually can be handled by FindInstance[]*)
+		result=TimeConstrained[FindInstance[{poly==0,(Times@@var)!=0},var,domain,n],10,$Failed];
+		If[result=!=$Failed&&result=!={}&&Head[result]=!=FindInstance,Return[result]];
+	];
 	result=Reap[
 		flag=0;
 		Do[
@@ -1359,7 +1364,7 @@ Monitor[Do[(*analyze sector by sector*)
 			xl=Cases[u,Subscript[x,_],Infinity]//DeleteDuplicates;
 			If[xl==={},Continue[]];
 			u=Times@@Power@@@u;
-			AppendTo[benchlist,{u,xl,GetDimension[u,xl]}]
+			AppendTo[benchlist,{u,xl,GetDimension[u,xl,Time->300]}]
 		,{l,1,Length[brep]}];
 		(*If[OptionValue[deBug],Print["bench dimension: ",benchlist]];*)
 		Do[
@@ -1385,7 +1390,7 @@ Monitor[Do[(*analyze sector by sector*)
 				If[bench[[3]]===$Failed,Continue[]];(*overtime or degenerate, we will pass this case*)
 				u=bench[[1]];
 				xl=bench[[2]];
-				If[Max[Table[GetDimension[u/.sol[[m]],xl],{m,1,Length[sol]}]]>=bench[[3]],flag=1;Break[]]
+				If[Max[Table[GetDimension[u/.sol[[m]],xl,Time->300],{m,1,Length[sol]}]]>=bench[[3]],flag=1;Break[]]
 			,{l,1,Length[brepr]}];
 			(*Print["dimension calculation finished!"];(*//////////////////////////////////*)*)
 			If[flag==1,tem1=Complement[tem1,{tem3[[k]]}]]
@@ -1590,7 +1595,7 @@ RemoveSPole[poles_,OptionsPattern[]]:=Module[{tem,tem1,basis,i},
 
 (*extension of RemoveSPole*)
 Options[RemoveSPoleBeta]={deBug->False};
-RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{tem,tem1,den,num,pos,pos1,var,sol,isprep,inf,infr,i,k},
+RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{flag,tem,tem1,den,num,pos,pos1,var,sol,isprep,inf,infr,i,k},
 	tem=poles;
 	(*This function simplifies the poles which may be very simple if the former variable depends on the latter variable*)
 	tem1=Reap[
@@ -1607,11 +1612,13 @@ RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{tem,tem1,den,num,pos,pos1,var,
 					pos1=Position[num,0,1]//Flatten;
 					If[Not@ContainsAll[pos1,pos],Continue[]];
 					(*only when both the numerator and denominator are 0, then it is an indeterminant*)
+					flag=0;
 					Do[
-						var=Cases[{Denominator[infr[[pos[[k]],2]]]},Subscript[x,_],Infinity]//DeleteDuplicates;
-						sol=Solve[Thread@Equal[(D[(infr[[pos[[k]],1]]-infr[[pos[[k]],2]])//Together//Numerator,#]&/@var)//.(Drop[infr,pos[[k]]]),0],infr[[pos[[k]],1]]];
-						If[sol==={}||sol==={{}},Continue[],infr[[pos[[k]]]]=(sol[[1,1]])]
+						var=Cases[{Denominator[infr[[pos[[-k]],2]]]},Subscript[x,_],Infinity]//DeleteDuplicates;
+						sol=Solve[Thread@Equal[(D[(infr[[pos[[-k]],1]]-infr[[pos[[-k]],2]])//Together//Numerator,#]&/@var)//.(Drop[infr,pos[[-k]]]),0],infr[[pos[[-k]],1]]];
+						If[sol==={}||sol==={{}},flag=1;Break[],infr[[pos[[-k]]]]=(sol[[1,1]])]
 					,{k,1,Length[pos]}];
+					If[flag===1,Continue[]];
 					Sow[{tem[[i,1]],Join[inf,infr,Take[tem[[i,2]],-1]]}];
 					If[OptionValue[deBug],Print["indeterminant calculated: ",infr," from pole: ",tem[[i]]]];
 					Continue[]
@@ -1629,11 +1636,13 @@ RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{tem,tem1,den,num,pos,pos1,var,
 					pos1=Position[num,0,1]//Flatten;
 					If[Not@ContainsAll[pos1,pos],Continue[]];
 					(*only when both the numerator and denominator are 0, then it is an indeterminant*)
+					flag=0;
 					Do[
-						var=Cases[{Denominator[infr[[pos[[k]],2]]]},Subscript[x,_],Infinity]//DeleteDuplicates;
-						sol=Solve[Thread@Equal[(D[(infr[[pos[[k]],1]]-infr[[pos[[k]],2]])//Together//Numerator,#]&/@var)//.(Drop[infr,pos[[k]]]),0],infr[[pos[[k]],1]]];
-						If[sol==={}||sol==={{}},Continue[],infr[[pos[[k]]]]=(sol[[1,1]])]
+						var=Cases[{Denominator[infr[[pos[[-k]],2]]]},Subscript[x,_],Infinity]//DeleteDuplicates;
+						sol=Solve[Thread@Equal[(D[(infr[[pos[[-k]],1]]-infr[[pos[[-k]],2]])//Together//Numerator,#]&/@var)//.(Drop[infr,pos[[-k]]]),0],infr[[pos[[-k]],1]]];
+						If[sol==={}||sol==={{}},flag=1;Break[],infr[[pos[[-k]]]]=(sol[[1,1]])]
 					,{k,1,Length[pos]}];
+					If[flag===1,Continue[]];
 					Sow[{tem[[i,1]],infr}];
 					If[OptionValue[deBug],Print["indeterminant calculated: ",infr," from pole: ",tem[[i]]]];
 					Continue[]
