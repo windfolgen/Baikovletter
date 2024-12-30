@@ -1623,7 +1623,7 @@ RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{flag,tem,tem1,den,num,pos,pos1
 					If[OptionValue[deBug],Print["indeterminant calculated: ",infr," from pole: ",tem[[i]]]];
 					Continue[]
 				];(*avoid the situation where some variable becomes infinity after substituting values*)
-				isprep=Thread@Rule[Keys[infr],Values[infr]//.infr//Factor]//Sort;
+				isprep=Thread@Rule[Keys[infr],Values[infr]//.infr//Factor](*//Sort*);
 				Sow[{tem[[i,1]],Join[inf,isprep,Take[tem[[i,2]],-1]]}]
 				,
 				den=Denominator[Values[tem[[i,2]]]]//.tem[[i,2]]//Factor//Quiet;
@@ -1647,7 +1647,7 @@ RemoveSPoleBeta[poles_,OptionsPattern[]]:=Module[{flag,tem,tem1,den,num,pos,pos1
 					If[OptionValue[deBug],Print["indeterminant calculated: ",infr," from pole: ",tem[[i]]]];
 					Continue[]
 				];(*avoid the situation where some variable becomes infinity after substituting values*)
-				isprep=Thread@Rule[Keys[tem[[i,2]]],Values[tem[[i,2]]]//.tem[[i,2]]//Factor]//Sort;(*the second part of tem[[i]] is for isp*)
+				isprep=Thread@Rule[Keys[tem[[i,2]]],Values[tem[[i,2]]]//.tem[[i,2]]//Factor](*//Sort*);(*the second part of tem[[i]] is for isp*)
 				Sow[{tem[[i,1]],isprep}]
 			];
 		,{i,1,Length[tem]}];
@@ -1683,7 +1683,28 @@ Return[{poles,Sequence@@CompatiblePoleGraph[poles]}];
 ];
 
 
-ExtractSquareRoots[exp_]:=((Times@@Power@@@(MapAt[Mod[#,2]&,DeleteCases[FactorList[#],{_?NumericQ,_}],{All,2}]))&/@(exp[[All,4]]//Flatten//DeleteCases[#,_?NumericQ]&))//DeleteCases[#,1]&//DeleteDuplicates[#,((#1-#2//Expand)===0||(#1+#2//Expand)===0)&]&;
+Options[AllRationalLetters]={OutputLevel->2};
+AllRationalLetters[polestructure_,OptionsPattern[]]:=
+If[OptionValue[OutputLevel]==1,
+Return[(FactorList[#][[All,1]]&/@(polestructure[[All,2]]//Flatten//DeleteDuplicates))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates],
+Return[(FactorList[#][[All,1]]&/@(polestructure[[All,3]]//Flatten//DeleteDuplicates))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates]
+];
+
+
+ExtractSquareRoots[exp_]:=Module[{tem,rllist,result,i,tem1,tem2},
+	tem=((Times@@Power@@@(MapAt[Mod[#,2]&,DeleteCases[FactorList[#],{_?NumericQ,_}],{All,2}]))&/@(exp[[All,4]]//Flatten//DeleteCases[#,_?NumericQ]&))//DeleteCases[#,1]&//DeleteDuplicates[#,((#1-#2//Expand)===0||(#1+#2//Expand)===0)&]&;
+	(*then we remove terms that are spurious, that is, some factor is not in rllist*)
+	rllist=AllRationalLetters[exp];
+	result=Reap[
+		Do[
+			tem1=FactorList[tem[[i]]][[All,1]]//DeleteCases[#,_?NumericQ]&;
+			tem2=RIntersection[rllist,tem1];
+			tem1=Complement[tem1,tem2[[2]]];
+			If[tem1==={},Sow[tem[[i]]]]
+		,{i,1,Length[tem]}];
+	][[2]];
+	If[result=!={},Return[result[[1]]],Return[{}]];
+];
 
 
 Options[ConstructLetter]={deBug->False};
@@ -1840,14 +1861,6 @@ Monitor[Do[
 	,{a,1,Length[subset]}],
 ProgressIndicator[a,{1,Length[subset]}]];
 Return[summary];
-];
-
-
-Options[AllRationalLetters]={OutputLevel->2};
-AllRationalLetters[polestructure_,OptionsPattern[]]:=
-If[OptionValue[OutputLevel]==1,
-Return[(FactorList[#][[All,1]]&/@(polestructure[[All,2]]//Flatten//DeleteDuplicates))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates],
-Return[(FactorList[#][[All,1]]&/@(polestructure[[All,3]]//Flatten//DeleteDuplicates))//Flatten//DeleteCases[#,_?NumericQ]&//DeleteDuplicates]
 ];
 
 
