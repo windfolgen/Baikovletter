@@ -2076,10 +2076,10 @@ If[pole==={},
 ];
 
 If[OptionValue[deBug],Print["tem: ",tem];];
-If[NumericQ[tem],Return[False]];(*when the polynomials under square root are all perfect square, it is actually a rational letter, we don't count them here*)
+If[NumericQ[tem],Return[{False}]];(*when the polynomials under square root are all perfect square, it is actually a rational letter, we don't count them here*)
 (*c=PolyMemberQ[permsq,tem];d=AnyTrue[permsq,NumericQ[#/tem//Cancel]&];
 If[c=!=d,Print["exp: ",permsq,tem]];*)
-If[PolyMemberQ[permsq,tem](*AnyTrue[permsq,NumericQ[#/tem//Cancel]&]*),Return[True],Return[False]];
+If[PolyMemberQ[permsq,tem](*AnyTrue[permsq,NumericQ[#/tem//Cancel]&]*),Return[{True,tem}],Return[{False}]];
 ];
 
 
@@ -2261,7 +2261,7 @@ Do[
 	If[OptionValue[deBug],PrintTemporary[SessionTime[]-start]];
 	If[var==={},
 		(*when this letter consists only of pure kinematics gram*)		
-		If[!AdmissiblePoleQ[glist,{},OptionValue[PermSq],krep],Continue[],AppendTo[kletters,{letters[[i,1]],{},letters[[i,4]]}]];
+		If[!(AdmissiblePoleQ[glist,{},OptionValue[PermSq],krep][[1]]),Continue[],AppendTo[kletters,{letters[[i,1]],{},letters[[i,4]]}]];
 		Continue[],
 		
 		pos=assoc[var];
@@ -2275,9 +2275,15 @@ Do[
 		Throw[{{},{},{}}]
 		,
 		(*In this case, we use information of square roots to constrain the form*)
+		ntem={};
 		Do[
-			If[!AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],
+			tem=AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep];
+			If[!(tem[[1]]),
 				Continue[],
+				If[MemberQ[ntem,{poles[[j,1]]//Flatten//Sort,tem[[2]]}],
+					Continue[](*cases that has been considered*),
+					AppendTo[ntem,{poles[[j,1]]//Flatten//Sort,tem[[2]]}];
+				];
 				AppendTo[nletters,{letters[[i,1]],poles[[j,1]],letters[[i,4]]}]
 			]
 		,{j,1,Length[poles]}]
@@ -2392,8 +2398,17 @@ Do[
 		(*In this case, we use additional information to constrain the form*)
 		pos=assoc[var];
 		poles=Table[If[Head[pos[[i]]]===List,{#,pos[[i]]}&/@MergePoles[opoles[[1]][[pos[[i]]]]],{#,{pos[[i]]}}&/@MergePoles[{opoles[[1,pos[[i]]]]}]],{i,1,Length[pos]}]//Flatten[#,1]&;(*the pole maps needed*)
+		ntem={};
 		Do[
-			If[AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep],AppendTo[adpole,poles[[j,1]]]]
+			tem=AdmissiblePoleQ[glist,poles[[j,1]],OptionValue[PermSq],krep];
+			If[!(tem[[1]]),
+				Continue[],
+				If[MemberQ[ntem,{poles[[j,1]]//Flatten//Sort,tem[[2]]}],
+					Continue[](*cases that has been considered*),
+					AppendTo[ntem,{poles[[j,1]]//Flatten//Sort,tem[[2]]}];
+				];
+				AppendTo[adpole,poles[[j,1]]]
+			]
 		,{j,1,Length[poles]}]
 	];
 	(*If[OptionValue[deBug],Print["adpole: ",adpole]];*)
@@ -2425,7 +2440,7 @@ Monitor[
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
-eresult=Monitor[Table[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
 eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
 Print["session time: ",SessionTime[]-start];
 Print["analyzing second type construction..."];
@@ -2463,7 +2478,7 @@ Print["Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
 (*DistributeDefinitions[tem,ApplyPoleToLetter];*)
 (*Return[tem];*)
-eresult=Monitor[Table[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
 (*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
 eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
 Print["session time: ",SessionTime[]-start];
