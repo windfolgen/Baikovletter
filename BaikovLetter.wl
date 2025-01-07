@@ -149,6 +149,11 @@ AllAlgLetters::usage="AllAlgLetters[poles,algletter,reform,krep] get all possibl
 AllAlgLettersPL::usage="The parallel version of AllAlgLetters[poles,algletter,reform,krep]";
 
 
+ApplyPolesToAlgLetter3::usage="ApplyPolesToAlgLetter3[poles,letters,krep] apply the poles with integrated variables set to 0 to letters.";
+AllAlgLettersSupplement::usage="AllAlgLettersSupplement[poles,algletter,krep] gives the supplement set of algebraic letters calculated by ApplyPolesToAlgLetter3[];";
+AllAlgLettersSupplementPL::usage="AllAlgLettersSupplementPL[poles,algletter,krep] gives the supplement set of algebraic letters calculated by ApplyPolesToAlgLetter3[]. The parallel version of AllAlgLettersSupplement.";
+
+
 SameAlgLetterQ::usage="SameAlgLetterQ[a1,a2] determines whether a1 and a2 are two equivalent algebraic letters.";
 SameGramQ::usage="SameGramQ[g1,g2] decides whether two monomials of Grams equal to each other (or only differ by a minus sign, we take this as the same too).";
 SameAlgLetterGramQ::usage="Internal usage! SameAlgLetterGramQ[letter1,letter2] decides whether two algbraic letters with abstract expression of G equals to each other. letter1 and letter2 should be in the form {Log[a+Sqrt[b]/(a-Sqrt[b])],a^2-b,...}.";
@@ -2487,6 +2492,112 @@ eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
 Print["session time: ",SessionTime[]-start];
 If[OptionValue[deBug],Return[{eresult,eresult2,spresult}]];
 Return[{eresult,eresult2}];
+];
+
+
+Options[ApplyPolesToAlgLetter3]={Sector->{},AdRep->{},deBug->False,PermSq->{}};
+ApplyPolesToAlgLetter3[opoles_,letters_,krep_,OptionsPattern[]]:=Catch@Module[{start,poles,tempole,temvar,tem,ntem,glist,glistd,Glist,ll,nletters={},var,rep,rep1,gr,ga,isp,pos,path,dis},
+If[letters==={},Return[{nletters,{},{}}]];(*when the input is null, return empty set*)
+start=SessionTime[];
+(*first find all possible pole maps for the algebraic letters*)
+poles=opoles[[1]];
+Do[
+	var=(letters[[i,1]]//Cases[#,_G,Infinity]&//DeleteDuplicates)/.{G[a_,b_]:>GramMat[a,b,krep]}//Cases[#,Subscript[x,_],Infinity]&//DeleteDuplicates//Sort;(*all Baikov variables involved in an algebraic letter*)
+	If[var==={},Continue[]];(*this case has been considered already*)
+	Do[
+		temvar=Cases[poles[[k]],Subscript[x,_],Infinity]//DeleteDuplicates;
+		If[ContainsAll[temvar,var],Continue[]];(*this case has been considered already*)
+		temvar=Complement[var,temvar];(*the additional variables present*)
+		If[Length[temvar]>2,Continue[]];(*no more than 2 additional variables*)
+			
+		If[OptionValue[deBug],PrintTemporary[SessionTime[]-start];Print["temvar: ",temvar]];
+		(*letterpath=letters[[i,3]];*)
+		ga=((Cases[letters[[i,1]],Power[z_,1/2]->z,Infinity]//DeleteDuplicates)[[1]])/.{G[{},{}]->1};(*algebraic part of letter*)
+		gr=(letters[[i,1]][[1]]//Numerator)/.{Power[_,1/2]->0};(*rational part of letter*)
+		glist=Cases[{ga},_G,Infinity]//DeleteDuplicates;(*grams under square root*)
+		glistd=Cases[{letters[[i,2]]},_G,Infinity]//DeleteDuplicates;(*grams corresponding to the multiplication of numerator and denominator of algebraic letter*)
+		If[OptionValue[deBug],PrintTemporary["ga: ",ga];PrintTemporary["gr: ",gr];PrintTemporary["var: ",var]];
+			
+		If[OptionValue[deBug],PrintTemporary[SessionTime[]-start]];
+		tempole=MergePoles[{Join[{Join[poles[[k,1]],Thread@Rule[temvar,0]]},Drop[poles[[k]],1]]}][[1]];
+		If[OptionValue[deBug],Print["tempole: ",tempole]];
+		tem=AdmissiblePoleQ[glist,tempole,OptionValue[PermSq],krep];
+		If[!(tem[[1]]),
+			Continue[],
+			AppendTo[nletters,{letters[[i,1]],tempole,letters[[i,4]]}]
+		]
+	,{k,1,Length[poles]}]		
+,{i,1,Length[letters]}];
+
+Throw[{nletters,{},{}}];
+];
+
+
+Options[AllAlgLettersSupplement]={deBug->False,PermSq->{}};
+AllAlgLettersSupplement[poles_,algletter_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,part,pathdis,permsq,looppath,kinepath,b},
+start=SessionTime[];
+l=Length[algletter];
+permsq=OptionValue[PermSq];
+permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
+Print["totally ",l," sectors need to be analyzed"];
+(*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
+part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
+Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
+(*export the data to parallelly run them in terminal*)*)
+pathdis=OptionValue[PathDis];
+looppath=OptionValue[LoopPath];
+kinepath=OptionValue[KinePath];
+Monitor[Do[
+(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
+	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
+	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+,{i,1,Length[algletter]}],ProgressIndicator[i,{1,Length[algletter]}]];
+Print["session time: ",SessionTime[]-start];
+Print["Substituting poles into expressions..."];
+tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
+(*DistributeDefinitions[tem,ApplyPoleToLetter];*)
+(*Return[tem];*)
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+(*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
+eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
+Print["session time: ",SessionTime[]-start];
+If[OptionValue[deBug],Return[{eresult,spresult}]];
+Return[{eresult}];
+];
+
+
+Options[AllAlgLettersSupplementPL]={deBug->False,PermSq->{}};
+AllAlgLettersSupplementPL[poles_,algletter_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,part,pathdis,permsq,looppath,kinepath,b},
+start=SessionTime[];
+l=Length[algletter];
+permsq=OptionValue[PermSq];
+permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
+Print["totally ",l," sectors need to be analyzed"];
+(*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
+part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
+Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
+(*export the data to parallelly run them in terminal*)*)
+pathdis=OptionValue[PathDis];
+looppath=OptionValue[LoopPath];
+kinepath=OptionValue[KinePath];
+DistributeDefinitions[poles,algletter,krep,permsq,pathdis,looppath,kinepath,ApplyPolesToAlgLetter3,AllAlgLettersSupplementPL];
+SetSharedVariable[result,spresult];
+ParallelDo[
+(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
+	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
+	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+,{i,1,Length[algletter]}];
+Print["session time: ",SessionTime[]-start];
+Print["Substituting poles into expressions..."];
+tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
+(*DistributeDefinitions[tem,ApplyPoleToLetter];*)
+(*Return[tem];*)
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+(*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
+eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
+Print["session time: ",SessionTime[]-start];
+If[OptionValue[deBug],Return[{eresult,spresult}]];
+Return[{eresult}];
 ];
 
 
