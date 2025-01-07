@@ -2544,13 +2544,10 @@ Print["totally ",l," sectors need to be analyzed"];
 part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
 Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
 (*export the data to parallelly run them in terminal*)*)
-pathdis=OptionValue[PathDis];
-looppath=OptionValue[LoopPath];
-kinepath=OptionValue[KinePath];
 Monitor[Do[
 (*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
 	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
-	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
 ,{i,1,Length[algletter]}],ProgressIndicator[i,{1,Length[algletter]}]];
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
@@ -2567,7 +2564,7 @@ Return[{eresult}];
 
 
 Options[AllAlgLettersSupplementPL]={deBug->False,PermSq->{}};
-AllAlgLettersSupplementPL[poles_,algletter_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,part,pathdis,permsq,looppath,kinepath,b},
+AllAlgLettersSupplementPL[poles_,algletter_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,part,permsq,b},
 start=SessionTime[];
 l=Length[algletter];
 permsq=OptionValue[PermSq];
@@ -2577,15 +2574,12 @@ Print["totally ",l," sectors need to be analyzed"];
 part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
 Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
 (*export the data to parallelly run them in terminal*)*)
-pathdis=OptionValue[PathDis];
-looppath=OptionValue[LoopPath];
-kinepath=OptionValue[KinePath];
-DistributeDefinitions[poles,algletter,krep,permsq,pathdis,looppath,kinepath,ApplyPolesToAlgLetter3,AllAlgLettersSupplementPL];
+DistributeDefinitions[poles,algletter,krep,permsq,ApplyPolesToAlgLetter3,AllAlgLettersSupplementPL];
 SetSharedVariable[result,spresult];
 ParallelDo[
 (*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
 	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
-	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
 ,{i,1,Length[algletter]}];
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
