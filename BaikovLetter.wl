@@ -1213,7 +1213,7 @@ RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,
 ];
 
 
-Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False,RemoveSquareRoots->True,"GeneralPinch"->False,"SpecialKinematics"->{}};
+Options[PolesAnalyze]={deBug->False,AugAna->True,SelectQ->False,SelectAllQ->False,AdInfo->False,RemoveSquareRoots->True,"GeneralPinch"->False,"SpecialKinematics"->{},"samplingNum"->2};
 PolesAnalyze[result_,topsector_,krep_,n_,OptionsPattern[]]:=Module[{start,subset,zerolist,brep,supersec,xl,cutr,cut,adcut,singular={},sol={},LVlocal,sqlocal,sqt,intset,hintset,tem,tem1,tem2,tem3,rl,tsingular={},cc,len,var,groebner,pos,pow,flag,brepr,benchlist,bench,u,tsol,vrep,cover,dim},
 start=SessionTime[];
 subset=Subsets[topsector]//ReverseSortBy[#,Length]&//DeleteCases[#,{}]&;
@@ -1342,7 +1342,7 @@ Monitor[Do[(*analyze sector by sector*)
 	,{j,1,Length[brep]}];
 	If[singular=!={},tem=singular[[All,2]],Print["The calculation of subset ",subset[[a]]," hasn't finished in given time. It has been skipped!"];Continue[]];
 	If[pos=!={},brep=Delete[brep,pos]];(*delete those representations whose calculations are not finished in given time*)
-	If[!OptionValue[SelectQ]||OptionValue[SelectQ],
+	If[!OptionValue[SelectQ],
 		(*now we try to remove all spurious letters in a more rigorous way*)
 		tem3=tem;(*Print["tem: ",tem];*)
 		(*among different representations, not all analysis of them are reliable, especially when the number of remaining Baikov variables are larger than 3*)
@@ -1381,7 +1381,7 @@ Monitor[Do[(*analyze sector by sector*)
 			pos=FirstPosition[pow,1];(*if there is one variable linear in the equation, then the rational number solution of this system is easy to get*)
 			If[pos===Missing["NotFound"],
 				(*If[subset[[a]]==={2,3,4,5,6,8},Print["tem3,var: ",{tem3,var}]];(*//////////////////////////////////*)*)
-				sol=TimeConstrained[RFindInstance[tem3[[k]](*Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]]*),var,Rationals,2],120,0];(*find two numeric solutions to check*)
+				sol=TimeConstrained[RFindInstance[tem3[[k]](*Join[{tem3[[k]]==0,var[[1]]>0},Thread@Unequal[var,0]]*),var,Rationals,Max[OptionValue["samplingNum"],2]],120,0];(*find two numeric solutions to check*)
 				If[sol===0,Print["haven't find solutions in given time. add this singularity: ",tem3[[k]]];(*tem1=Complement[tem1,{tem3[[k]]}];*)Continue[]];
 				If[sol==={},Print["this polynomial has no non-zero solution: ",tem3[[k]]," sec: ",a];sol=FindInstance[{tem3[[k]]==0},var]],
 				tsol=Solve[tem3[[k]]==0,var[[pos]]][[1]];
