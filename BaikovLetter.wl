@@ -2718,7 +2718,7 @@ Return[rel];
 ];
 
 
-LetterInfo[letter_,algresult_,polestructure_]:=Module[{nl,pos,tem,apos,i},
+LetterInfo[letter_,algresult_,polestructure_]:=Module[{nl,pos,tem,tempos,apos,i},
 If[Head[letter]=!=Log,nl=Log[letter],nl=letter];
 If[FreeQ[nl,Power[_,1/2]],
 (*this is a rational letter*)
@@ -2727,7 +2727,8 @@ Print["This letter can be generated from following sectors: ",polestructure[[pos
 tem=polestructure[[pos,1]]//Flatten[#,1]&;
 apos=Reap[
 	Do[
-		If[Not@FreeQ[tem[[i]],nl[[1]]]||Not@FreeQ[tem[[i]],-nl[[1]]//Factor],Sow[tem[[i,-1]]]]
+		tempos=Join[Position[tem[[i]],nl[[1]]],Position[tem[[i]],-nl[[1]]//Factor]];
+		If[tempos=!={},Sow[tem[[i,-1]]]]
 	,{i,1,Length[tem]}]
 ][[2]];
 If[apos==={},Print["The explicit path is not determined, loop up the following position of output of PolesAnalyze[]: ",pos],apos=apos[[1]]];
