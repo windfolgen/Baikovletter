@@ -70,6 +70,7 @@ FindCover::usage="FindCover[list] find a cover of the set of all variables prese
 
 
 RFindInstance::usage="Refined version of FindInstance[]. Same usage as FindInstance[poly,var,domain,n] except that the first argument should be a polynomial.";
+TFindInstance::usage="Refined version of FindInstance[] for quadratic polynomials. Internal use only.";
 
 
 PolesAnalyze::usage="PolesAnalyze[result,topsector,krep,n] gives the possible poles, their paths and leading singularities related. topsector is specified by a number list like {1,2,3,4} where 1-st, 2-nd, 3-rd and 4-th propagators are present in this sector. n is the total number of Baikov variables in a family. Actually, this serves as a limited case of dlog construction. The output will be a list of forms like {{{pole,poly,path},...},polylist1,polylist2,sector}. poles are classified by their sectors.";
@@ -1184,6 +1185,18 @@ PolyDim[exp_]:=Module[{var,rep},
 ]
 
 
+TFindInstance[poly_,var_,domain_]:=Module[{pow,pos,sol,sq,sol1},
+	pow=Exponent[poly,#]&/@var;
+	pos=FirstPosition[pow,2];(*if this is a quadratic polynomial of some variable*)
+	If[pos===Missing["NotFound"],Return[FindInstance[{(poly)==0(*,var[[1]]!=0*)},var,domain]//Quiet]];
+	sol=Solve[poly==0,var[[pos]]][[1]];
+	sq=Cases[sol,Power[a_,1/2]->a,Infinity]//DeleteDuplicates//DeleteCases[#,_?NumericQ]&;
+	sol1=FindInstance[sq[[1]]==0,Complement[var,var[[pos]]],domain]//Quiet;
+	If[sol1==={}||Head[sol1]===FindInstance,Return[FindInstance[{(poly)==0(*,var[[1]]!=0*)},var,domain]//Quiet]];
+	Return[{Join[sol/.sol1[[1]],sol1[[1]]]}];
+];
+
+
 Options[RFindInstance]={deBug->False};
 RFindInstance[poly_,ovar_,domain_,n_,OptionsPattern[]]:=Module[{var,pow,list,rep,sol,result,k,a,m=1,flag,count=1},
 	var=RandomSample[ovar];
@@ -1200,9 +1213,10 @@ RFindInstance[poly_,ovar_,domain_,n_,OptionsPattern[]]:=Module[{var,pow,list,rep
 		flag=0;
 		Do[
 			If[count>n,Break[]];
+			var=RandomSample[var];
 			rep=Thread@Rule[Drop[var,m+1],RandomInteger[{1,5000},Length[var]-m-1]];
 			If[OptionValue[deBug],Print["rep: ",rep]];
-			sol=FindInstance[{(poly/.rep)==0(*,var[[1]]!=0*)},Take[var,m+1],domain]//Quiet;
+			sol=TFindInstance[{(poly/.rep)(*,var[[1]]!=0*)},Take[var,m+1],domain]//Quiet;
 			If[OptionValue[deBug],Print["sol: ",sol]];
 			If[sol==={}||Head[sol]===FindInstance,
 				If[flag<10,flag=flag+1;Continue[],m=m+1;If[m==Length[var],Break[]]],
