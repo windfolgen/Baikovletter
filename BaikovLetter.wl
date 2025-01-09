@@ -1185,7 +1185,8 @@ PolyDim[exp_]:=Module[{var,rep},
 
 
 Options[RFindInstance]={deBug->False};
-RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,result,k,a,m=1,flag,count=1},
+RFindInstance[poly_,ovar_,domain_,n_,OptionsPattern[]]:=Module[{var,pow,list,rep,sol,result,k,a,m=1,flag,count=1},
+	var=RandomSample[ovar];
 	pow=Exponent[poly,#]&/@var;
 	list=(Partition[Riffle[pow,var],2]//SortBy[#,First]&)[[All,2]];(*sort the variables by its power*)
 	(*Print["list: ",list];*)
@@ -1199,7 +1200,8 @@ RFindInstance[poly_,var_,domain_,n_,OptionsPattern[]]:=Module[{pow,list,rep,sol,
 		flag=0;
 		Do[
 			If[count>n,Break[]];
-			rep=Thread@Rule[Drop[var,m+1],RandomPrime[{10,10000},Length[var]-m-1]];
+			rep=Thread@Rule[Drop[var,m+1],RandomInteger[{1,5000},Length[var]-m-1]];
+			If[OptionValue[deBug],Print["rep: ",rep]];
 			sol=FindInstance[{(poly/.rep)==0(*,var[[1]]!=0*)},Take[var,m+1],domain]//Quiet;
 			If[OptionValue[deBug],Print["sol: ",sol]];
 			If[sol==={}||Head[sol]===FindInstance,
