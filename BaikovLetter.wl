@@ -1342,7 +1342,7 @@ Monitor[Do[(*analyze sector by sector*)
 	,{j,1,Length[brep]}];
 	If[singular=!={},tem=singular[[All,2]],Print["The calculation of subset ",subset[[a]]," hasn't finished in given time. It has been skipped!"];Continue[]];
 	If[pos=!={},brep=Delete[brep,pos]];(*delete those representations whose calculations are not finished in given time*)
-	If[!OptionValue[SelectQ],
+	If[!OptionValue[SelectQ]||OptionValue[SelectQ],
 		(*now we try to remove all spurious letters in a more rigorous way*)
 		tem3=tem;(*Print["tem: ",tem];*)
 		(*among different representations, not all analysis of them are reliable, especially when the number of remaining Baikov variables are larger than 3*)
