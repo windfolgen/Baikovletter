@@ -2440,77 +2440,6 @@ Return[nletters//Flatten[#,1]&//DeleteDuplicatesBy[#,First]&];
 ];
 
 
-Options[AllAlgLetters]={deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True};
-AllAlgLetters[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,eresult2,a,b,permsq},
-start=SessionTime[];
-l=Length[algletter];
-permsq=OptionValue[PermSq];
-permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
-Print["totally ",l," sectors need to be analyzed"];
-Print["analyzing first type construction..."];
-Monitor[
-	Do[
-		If[OptionValue[deBug],PrintTemporary["subset: ",algletter[[a,2]]," session time: ",SessionTime[]-start]];
-		tem=ApplyPolesToAlgLetter1[poles,algletter[[a,1]],reform,krep,PermSq->permsq,PathDis->OptionValue[PathDis],KinePath->OptionValue[KinePath],LoopPath->OptionValue[LoopPath]];
-		ntem=Flatten[tem[[{1,2}]],1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;
-		(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
-		AppendTo[result,ntem];
-		If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
-	,{a,1,Length[algletter]}]
-,ProgressIndicator[a,{1,Length[algletter]}]];
-Print["session time: ",SessionTime[]-start];
-Print["Substituting poles into expressions..."];
-tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
-eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
-eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
-Print["session time: ",SessionTime[]-start];
-Print["analyzing second type construction..."];
-eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
-Print["session time: ",SessionTime[]-start];
-If[OptionValue[deBug],Return[{eresult,eresult2,spresult}]];
-Return[{eresult,eresult2}];
-];
-
-
-Options[AllAlgLettersPL]={deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True};
-AllAlgLettersPL[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,eresult2,part,pathdis,permsq,looppath,kinepath,b},
-start=SessionTime[];
-l=Length[algletter];
-permsq=OptionValue[PermSq];
-permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
-Print["totally ",l," sectors need to be analyzed"];
-Print["analyzing first type construction..."];
-(*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
-part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
-Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
-(*export the data to parallelly run them in terminal*)*)
-pathdis=OptionValue[PathDis];
-looppath=OptionValue[LoopPath];
-kinepath=OptionValue[KinePath];
-DistributeDefinitions[poles,algletter,reform,krep,permsq,pathdis,looppath,kinepath,ApplyPolesToAlgLetter1,AllAlgLettersPL];
-SetSharedVariable[result,spresult];
-ParallelDo[
-(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
-	AppendTo[result,ApplyPolesToAlgLetter1[poles,algletter[[i,1]],reform,krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
-	If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
-,{i,1,Length[algletter]}];
-Print["session time: ",SessionTime[]-start];
-Print["Substituting poles into expressions..."];
-tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
-(*DistributeDefinitions[tem,ApplyPoleToLetter];*)
-(*Return[tem];*)
-eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
-(*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
-eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
-Print["session time: ",SessionTime[]-start];
-Print["analyzing second type construction..."];
-eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
-Print["session time: ",SessionTime[]-start];
-If[OptionValue[deBug],Return[{eresult,eresult2,spresult}]];
-Return[{eresult,eresult2}];
-];
-
-
 Options[ApplyPolesToAlgLetter3]={Sector->{},AdRep->{},deBug->False,PermSq->{}};
 ApplyPolesToAlgLetter3[opoles_,letters_,krep_,OptionsPattern[]]:=Catch@Module[{start,poles,tempole,temvar,tem,ntem,glist,glistd,Glist,ll,nletters={},var,rep,rep1,gr,ga,isp,pos,path,dis},
 If[letters==={},Return[{nletters,{},{}}]];(*when the input is null, return empty set*)
@@ -2555,7 +2484,6 @@ start=SessionTime[];
 l=Length[algletter];
 permsq=OptionValue[PermSq];
 permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
-Print["totally ",l," sectors need to be analyzed"];
 (*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
 part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
 Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
@@ -2565,15 +2493,15 @@ Monitor[Do[
 	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
 	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
 ,{i,1,Length[algletter]}],ProgressIndicator[i,{1,Length[algletter]}]];
-Print["session time: ",SessionTime[]-start];
-Print["Substituting poles into expressions..."];
+Print["        session time: ",SessionTime[]-start];
+Print["        Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
 (*DistributeDefinitions[tem,ApplyPoleToLetter];*)
 (*Return[tem];*)
 eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
 (*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
 eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
-Print["session time: ",SessionTime[]-start];
+Print["        session time: ",SessionTime[]-start];
 If[OptionValue[deBug],Return[{eresult,spresult}]];
 Return[{eresult}];
 ];
@@ -2585,7 +2513,6 @@ start=SessionTime[];
 l=Length[algletter];
 permsq=OptionValue[PermSq];
 permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
-Print["totally ",l," sectors need to be analyzed"];
 (*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
 part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
 Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
@@ -2597,6 +2524,77 @@ ParallelDo[
 	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
 	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
 ,{i,1,Length[algletter]}];
+Print["        session time: ",SessionTime[]-start];
+Print["        Substituting poles into expressions..."];
+tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
+(*DistributeDefinitions[tem,ApplyPoleToLetter];*)
+(*Return[tem];*)
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+(*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
+eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
+Print["        session time: ",SessionTime[]-start];
+If[OptionValue[deBug],Return[{eresult,spresult}]];
+Return[{eresult}];
+];
+
+
+Options[AllAlgLetters]={deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True};
+AllAlgLetters[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,eresult2,eresult3,a,b,permsq},
+start=SessionTime[];
+l=Length[algletter];
+permsq=OptionValue[PermSq];
+permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
+Print["totally ",l," sectors need to be analyzed"];
+Print["analyzing first type construction..."];
+Monitor[
+	Do[
+		If[OptionValue[deBug],PrintTemporary["subset: ",algletter[[a,2]]," session time: ",SessionTime[]-start]];
+		tem=ApplyPolesToAlgLetter1[poles,algletter[[a,1]],reform,krep,PermSq->permsq,PathDis->OptionValue[PathDis],KinePath->OptionValue[KinePath],LoopPath->OptionValue[LoopPath]];
+		ntem=Flatten[tem[[{1,2}]],1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;
+		(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
+		AppendTo[result,ntem];
+		If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
+	,{a,1,Length[algletter]}]
+,ProgressIndicator[a,{1,Length[algletter]}]];
+Print["session time: ",SessionTime[]-start];
+Print["Substituting poles into expressions..."];
+tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
+eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],1000,$Failed],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]}],ProgressIndicator[b,{1,Length[tem]}]];
+eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
+Print["session time: ",SessionTime[]-start];
+Print["analyzing second type construction..."];
+eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
+Print["session time: ",SessionTime[]-start];
+Print["analyzing supplemental pole..."];
+eresult3=AllAlgLettersSupplement[poles,algletter,krep,PermSq->permsq];
+Print["session time: ",SessionTime[]-start];
+If[OptionValue[deBug],Return[{Join[eresult,eresult3[[1]]],eresult2,spresult}]];
+Return[{Join[eresult,eresult3[[1]]],eresult2}];
+];
+
+
+Options[AllAlgLettersPL]={deBug->False,PermSq->{},PathDis->False,KinePath->False,LoopPath->True};
+AllAlgLettersPL[poles_,algletter_,reform_,krep_,OptionsPattern[]]:=Module[{start,l,tem,ntem,result={},spresult={},eresult,eresult2,eresult3,part,pathdis,permsq,looppath,kinepath,b},
+start=SessionTime[];
+l=Length[algletter];
+permsq=OptionValue[PermSq];
+permsq=Join[permsq,Table[Times@@(PerfectSquareSplit[permsq[[i]]*permsq[[j]]][[2]]),{i,1,Length[permsq]},{j,i+1,Length[permsq]}]//Flatten]//DeleteDuplicates;
+Print["totally ",l," sectors need to be analyzed"];
+Print["analyzing first type construction..."];
+(*Export[OptionValue[tmpDir]<>"input.mx",{poles,reform,krep}];
+part=Partition[algletter,UpTo[Quotient[Length[algletter],OptionValue[NThreads]]+1]];
+Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Length[part]}];
+(*export the data to parallelly run them in terminal*)*)
+pathdis=OptionValue[PathDis];
+looppath=OptionValue[LoopPath];
+kinepath=OptionValue[KinePath];
+DistributeDefinitions[poles,algletter,reform,krep,permsq,pathdis,looppath,kinepath,ApplyPolesToAlgLetter1,AllAlgLettersPL];
+SetSharedVariable[result,spresult];
+ParallelDo[
+(*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
+	AppendTo[result,ApplyPolesToAlgLetter1[poles,algletter[[i,1]],reform,krep,PermSq->permsq,PathDis->pathdis,KinePath->kinepath,LoopPath->looppath]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+	If[OptionValue[deBug],AppendTo[spresult,tem[[3]]]]
+,{i,1,Length[algletter]}];
 Print["session time: ",SessionTime[]-start];
 Print["Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
@@ -2606,8 +2604,14 @@ eresult=Monitor[Table[{TimeConstrained[ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],k
 (*eresult=ParallelTable[{ApplyPoleToLetter[tem[[b,2]],tem[[b,1]],krep],tem[[b,1]],tem[[b,2]]},{b,1,Length[tem]},Method->"CoarsestGrained"];*)
 eresult=DeleteCases[eresult,_?(FreeQ[First[#],Power[_,1/2]]&)];(*remove expression without square roots*)
 Print["session time: ",SessionTime[]-start];
-If[OptionValue[deBug],Return[{eresult,spresult}]];
-Return[{eresult}];
+Print["analyzing second type construction..."];
+eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
+Print["session time: ",SessionTime[]-start];
+Print["analyzing supplemental pole..."];
+eresult3=AllAlgLettersSupplementPL[poles,algletter,krep,PermSq->permsq];
+Print["session time: ",SessionTime[]-start];
+If[OptionValue[deBug],Return[{Join[eresult,eresult3[[1]]],eresult2,spresult}]];
+Return[{Join[eresult,eresult3[[1]]],eresult2}];
 ];
 
 
