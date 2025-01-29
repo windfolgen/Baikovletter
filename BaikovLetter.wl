@@ -1691,6 +1691,7 @@ If[OptionValue[OutputLevel]==1,
 	tem1=result[[2,1]]//Flatten[#,1]&,(*poles only involve simple pole*)
 	If[OptionValue[OutputLevel]==2,Return[result[[2,2]]//Flatten[#,1]&]];(*poles that involve quadratic polynomial*)
 ];
+If[tem1==={},tem1={{Thread@Rule[xl,0],{}}}];(*if it is empty set, this is a one-loop problem*)
 Print["original total ",Length[tem1]," poles"];
 If[!OptionValue[Simp],Return[tem1]];
 poles=tem1;
@@ -2491,8 +2492,8 @@ Table[Export[OptionValue[tmpDir]<>"list"<>ToString[i]<>".mx",part[[i]]],{i,1,Len
 Monitor[Do[
 (*delete duplicates according to the first (Letter form) and second (poles info) term of the unit.*)
 	(*If[algletter[[i,-1]]=!={1,2,3,4,6,8},Continue[]];*)
-	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[i,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
-,{i,1,Length[algletter]}],ProgressIndicator[i,{1,Length[algletter]}]];
+	AppendTo[result,ApplyPolesToAlgLetter3[poles,algletter[[b,1]],krep,PermSq->permsq]//Flatten[#[[{1,2}]],1]&//DeleteDuplicatesBy[#,#[[{1,2}]]&]&];
+,{b,1,Length[algletter]}],ProgressIndicator[b,{1,Length[algletter]}]];
 Print["        session time: ",SessionTime[]-start];
 Print["        Substituting poles into expressions..."];
 tem=Flatten[result,1]//DeleteDuplicatesBy[#,#[[{1,2}]]&]&;(*remove duplicate expression again*)
@@ -2565,7 +2566,7 @@ Print["session time: ",SessionTime[]-start];
 Print["analyzing second type construction..."];
 eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
 Print["session time: ",SessionTime[]-start];
-Print["analyzing supplemental pole..."];
+Print["analyzing supplemental poles..."];
 eresult3=AllAlgLettersSupplement[poles,algletter,krep,PermSq->permsq];
 Print["session time: ",SessionTime[]-start];
 If[OptionValue[deBug],Return[{Join[eresult,eresult3[[1]]],eresult2,spresult}]];
@@ -2607,7 +2608,7 @@ Print["session time: ",SessionTime[]-start];
 Print["analyzing second type construction..."];
 eresult2=ApplyPolesToAlgLetter2[poles,{},reform,krep,PermSq->permsq];
 Print["session time: ",SessionTime[]-start];
-Print["analyzing supplemental pole..."];
+Print["analyzing supplemental poles..."];
 eresult3=AllAlgLettersSupplementPL[poles,algletter,krep,PermSq->permsq];
 Print["session time: ",SessionTime[]-start];
 If[OptionValue[deBug],Return[{Join[eresult,eresult3[[1]]],eresult2,spresult}]];
