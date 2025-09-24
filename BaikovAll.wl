@@ -23,9 +23,11 @@ j::usage="The function for Feynman integrals in LiteRed";
 \[Epsilon]::usage="the parameter for dimentional regularization";
 R::usage="Possible alias for square roots.";
 Rlist::usage="Possible list for square roots";
-Unprotect[Rlist];
+$SYMList::usage="Possible list for symbols which should be treated as numbers";
+Unprotect[Rlist,$SYMList];
 Rlist={};
-Protect[x,y,G,j,\[Epsilon],R,Rlist];
+$SYMList={};
+Protect[x,y,G,j,\[Epsilon],R,Rlist,$SYMList];
 
 (*some global path*)
 $SingularFilePath::usage="Path for temporary files of Singular.";
@@ -111,7 +113,17 @@ GramMat::usage="GramMat[l1,l2,rep] gives the Gram matrix for G[l1,l2]. rep is ki
 Gram2Poly::usage="Gram2Poly[exp,krep] transforms all the G[l1,l2] expressions to polynomials. krep is the kinematics replacement rule.";
 
 
+DeclareVarAsNum::usage="DeclareVarAsNum[list] declare a list of symbols as number.";
+
+
 Begin["`Private`"]
+
+
+DeclareVarAsNum[list_]:=Module[{},
+	Unprotect[$SYMList];
+	$SYMList=Join[$SYMList,list]//DeleteDuplicates;
+	Print["variables: ",$SYMList," have been declared as numbers."];
+];
 
 
 Options[GetDimension] = {Method -> "Singular", deBug -> False, fileDir
@@ -538,12 +550,9 @@ CenterDot[0, q_, OptionsPattern[]] :=
 
 SProd[p_, q_, OptionsPattern[]] :=
     If[OptionValue[ExpandQ],
-        (CenterDot[p, q] //. {CenterDot[Plus[x_, y__], z_] :> SProd[x,
-             z] + SProd[Plus[y], z], CenterDot[z_, Plus[x_, y__]] :> SProd[x, z] 
-            + SProd[Plus[y], z], CenterDot[Times[a_Integer, b_], c_] :> a * SProd[
-            b, c], CenterDot[c_, Times[a_Integer, b_]] :> a * SProd[b, c], CenterDot[Times[a_/;(NumericQ[a]), b_], c_] :> a * SProd[
-            b, c], CenterDot[c_, Times[a_/;(NumericQ[a]), b_]] :> a * SProd[b, c]}) // Factor
-            
+        (CenterDot[p, q] //. {CenterDot[Plus[x_, y__], z_] :> SProd[x,z] + SProd[Plus[y], z], CenterDot[z_, Plus[x_, y__]] :> SProd[x, z]+SProd[Plus[y], z], CenterDot[Times[a_Integer, b_], c_] :> a * SProd[b, c], 
+        CenterDot[c_, Times[a_Integer, b_]] :> a * SProd[b, c], CenterDot[Times[a_/;(NumericQ[a]), b_], c_] :> a * SProd[b, c], CenterDot[c_, Times[a_/;(NumericQ[a]), b_]] :> a * SProd[b, c],
+        CenterDot[Times[a_/;(SubsetQ[$SYMList,Variables[a]]), b_], c_] :> a * SProd[b, c], CenterDot[c_, Times[a_/;(SubsetQ[$SYMList,Variables[a]]), b_]] :> a * SProd[b, c]}) // Factor 
         ,
         CenterDot[p, q]
     ]; 
@@ -551,7 +560,8 @@ SProd[p_, q_, OptionsPattern[]] :=
 SetAttributes[SProd, {Orderless, Listable, Protected}]; 
 
 ExpandSP[exp_]:=Module[{rep},
-rep={CenterDot[Plus[x_,y__],z_]:>SProd[x,z]+SProd[Plus[y],z],CenterDot[z_,Plus[x_,y__]]:>SProd[x,z]+SProd[Plus[y],z],CenterDot[Times[a_Integer,b_],c_]:>a*SProd[b,c],CenterDot[c_,Times[a_Integer,b_]]:>a*SProd[b,c]};
+rep={CenterDot[Plus[x_,y__],z_]:>SProd[x,z]+SProd[Plus[y],z],CenterDot[z_,Plus[x_,y__]]:>SProd[x,z]+SProd[Plus[y],z],CenterDot[Times[a_Integer,b_],c_]:>a*SProd[b,c],CenterDot[c_,Times[a_Integer,b_]]:>a*SProd[b,c],CenterDot[Times[a_/;(SubsetQ[$SYMList,Variables[a]]), b_], c_] :> a * SProd[
+            b, c], CenterDot[c_, Times[a_/;(SubsetQ[$SYMList,Variables[a]]), b_]] :> a * SProd[b, c]};
 (exp//.rep)//Simplify
 ];
 
@@ -612,7 +622,7 @@ BaikovTrans[list_] :=
     Module[{l, v, m, xl, rep},
         l = Length @ list;
         xl = Table[Subscript[x, i], {i, 1, l}];
-        v = Flatten[Variables /@ list[[All, 1]]] // DeleteDuplicates;
+        v = Complement[Flatten[Variables /@ list[[All, 1]]],$SYMList] // DeleteDuplicates;
             
         m = Table[Coefficient[list[[i, 1]], #]& /@ v, {i, 1, l}];
         If[!SquareMatrixQ[m],
