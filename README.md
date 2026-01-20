@@ -9,12 +9,12 @@ a Mathematica package which generates Baikov representations for a given Feynman
 a Mathematica package which generates rational letters and algebraic letters for a given multiloop planar MPL Feynman integral family.
 ### UsageofBaikovLetter.nb
 a Mathematica notebook used to demonstrate the usage of BaikovLetter.wl
-### UsageofBaikovAll.wl
-a Mathematica notebook used to demonstrate the usage of BaikovAll.wl
 ### manual.pdf
 a PDF file which contains the operating principle of the package and some issues as examples.
 ### CDE/
 CDE matrices and UT basis for two nontrivial examples: two-loop two-mass pentabox and three-loop two-massive-leg ladder
+### examples/BaikovRepr
+UsageofBaikovAll.wl file and documentation used to demonstate how to use the new version of BaikovAll.wl
 
 ## Description
 This package __BaikovLetter.wl__ contains two major part:
