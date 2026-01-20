@@ -25,6 +25,7 @@ j::usage="The function for Feynman integrals in LiteRed";
 R::usage="Possible alias for square roots.";
 Rlist::usage="Possible list for square roots";
 $SYMList::usage="Possible list for symbols which should be treated as numbers";
+$LoopNum::usage="The loop number for current Feynman integral family.";
 Unprotect[Rlist,$SYMList,$BVersion];
 Rlist={};
 $SYMList={};
@@ -77,6 +78,8 @@ LPD::usage="LPD[loopm,extm,f] is used to represent a linear Feynman denominator.
 
 BaikovTrans::usage="BaikovTrans[dlist] gives the transformation between scalar product SProd[] and Baikov variables xi.";
 BaikovTrans::marg="The freedom of denominator list `1` doesn't equal to `2`: the freedom of the integral measure.";
+BaikovTrans::inputerr1="The input form is not right. Please use BaikovTrans[dlist,kinerep] or replace PD[loopm,extm,f] as PD[loopm,extm,f,KeepForm->False].";
+BaikovTrans::inputerr2="The input form is not right. Please use BaikovTrans[dlist/.kinerep] or replace PD[loopm,extm,f,_] as PD[loopm,extm,f,KeepForm->True].";
 
 BaikovRep::usage="BaikovRep[dlist,llist,elist] calculates the Standard Baikov representation of a given denominator list.";
 (*integrand in Baikov*)
@@ -459,28 +462,51 @@ GramDet[list1_, list2_] :=
 
 SyntaxInformation[PD] = {"ArgumentsPattern" -> {_, _, _}}; 
 
-Options[PD] = {RepList -> {}}; 
+Options[PD] = {RepList -> {}, KeepForm -> True}; 
 
 PD[loopm_, extm_, f_, OptionsPattern[]] :=
     Module[{s, l},
+        If[OptionValue[KeepForm],Return[PD[loopm,extm,f,"raw"]]];
         s = SProd[loopm, loopm] + 2 SProd[loopm, extm];
         l = SProd[extm, extm] /. OptionValue[RepList];
-        {s, l + f}
+        Return[{s, l + f}];
     ]; 
 
 SyntaxInformation[LPD] = {"ArgumentsPattern" -> {_, _, _}}; 
 
-Options[LPD] = {RepList -> {}}; 
+Options[LPD] = {RepList -> {}, KeepForm -> True}; 
 
 LPD[loopm_, extm_, f_, OptionsPattern[]] :=
     Module[{s, l},
+        If[OptionValue[KeepForm],Return[LPD[loopm,extm,f,"raw"]]];
         s = SProd[loopm, extm];
         l = f /. OptionValue[RepList];
-        {s, l}
+        Return[{s, l}];
     ];
 
 BaikovTrans[list_] :=
     Module[{l, v, m, xl, rep},
+        If[Not@FreeQ[list,PD|LPD],Message[BaikovTrans::inputerr1];Return[$Failed]];
+        l = Length @ list;
+        xl = Table[Subscript[x, i], {i, 1, l}];
+        v = Complement[Flatten[Variables /@ list[[All, 1]]],$SYMList] // DeleteDuplicates;
+            
+        m = Table[Coefficient[list[[i, 1]], #]& /@ v, {i, 1, l}];
+        If[!SquareMatrixQ[m],
+            Message[BaikovTrans::marg, Dimensions[m][[1]], Dimensions[
+                m][[2]]];
+            Return[0]
+        ];
+        rep = Thread @ Rule[v, LinearSolve[m, xl - list[[All, 2]]] //
+             Factor];
+        Return[{m, rep}];
+        
+    ]; 
+
+BaikovTrans[dlist_,kinerep_] :=
+    Module[{list, l, v, m, xl, rep},
+        If[FreeQ[dlist,PD]&&FreeQ[dlist,LPD],Message[BaikovTrans::inputerr2];Return[$Failed]];
+        list = dlist/.{PD[a_,b_,c_,"raw"]:>PD[a,b,c,KeepForm -> False],LPD[a_,b_,c_,"raw"]:>LPD[a,b,c,KeepForm -> False]}/.kinerep;
         l = Length @ list;
         xl = Table[Subscript[x, i], {i, 1, l}];
         v = Complement[Flatten[Variables /@ list[[All, 1]]],$SYMList] // DeleteDuplicates;
@@ -504,7 +530,9 @@ BaikovRep[dlist_, llist_, elist_, OptionsPattern[]] :=
         L = Length @ llist;
         E = Length @ elist;
         N = L (L + 1) / 2 + L * E;
-        r = BaikovTrans[dlist /. OptionValue[RepList]];
+        $LoopNum=L;
+        WriteString["stdout","The global variable $LoopNum has been set to "<>ToString[$LoopNum]<>"\n"];
+        r = BaikovTrans[dlist/.{PD[a_,b_,c_,"raw"]:>PD[a,b,c,KeepForm -> False],LPD[a_,b_,c_,"raw"]:>LPD[a,b,c,KeepForm -> False]}/. OptionValue[RepList]];
         If[r == 0,
             Return[0]
         ];
