@@ -1241,7 +1241,7 @@ Print["totally ",Length[subset]," sectors need to be analyzed!"];
 Monitor[Do[(*analyze sector by sector*)
 	If[OptionValue[deBug],Print["subset: ",subset[[a]]]];(*//////////////////////////////////*)
 	singular={};
-	brep=GetBaikovMatRep[result,subset[[a]],n,"looporder"->ExtractLoopOrder[krep]];
+	brep=GetBaikovMatRep[result,subset[[a]],n,"looporder"-> $LoopNum(*ExtractLoopOrder[krep]*)];
 	(*If[OptionValue[deBug],Print["path: ",brep]];*)
 	If[OptionValue[AugAna],
 		If[CheckValidity[brep,{},krep]==={},Continue[]];(*if some Grams in the representation equal to 0 before cut, then this sector is actually reducible already. We don't consider it.*)

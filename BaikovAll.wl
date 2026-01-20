@@ -26,6 +26,8 @@ R::usage="Possible alias for square roots.";
 Rlist::usage="Possible list for square roots";
 $SYMList::usage="Possible list for symbols which should be treated as numbers";
 $LoopNum::usage="The loop number for current Feynman integral family.";
+$BvNum::usage="The number of Baikov variables for current Feynman integral family.";
+BaikovPackage::initerr="The init.m file not found as `1`. Please set $InitFile to where the init.m located, e.g. /path/to/init.m, and then reload the package.";
 Unprotect[Rlist,$SYMList,$BVersion];
 Rlist={};
 $SYMList={};
@@ -33,11 +35,14 @@ $BVersion="1.1.0";
 Protect[x,y,G,j,\[Epsilon],R,Rlist,$SYMList,$BVersion];
 
 WriteString["stdout","Version: "<>$BVersion<>"\n"];
+WriteString["stdout","If you come across any problem, please contact phamapku14@gmail.com \n"];
 
 (*some global path*)
-Get["./init.m"];
-If[Not@DirectoryQ[$SingularFilePath],WriteString["stdout","!!Please set $SingularFilePath (where the users choose to store temporary files for Singular) in init.m and reload the package!"] ];
-If[Not@FileExistsQ[$SingularPath],WriteString["stdout", "!!Please set $SingularPath (which is the executable file of Singular, e.g. /usr/local/bin/Singular) in init.m and reload the package!"] ];
+$InitFile=DirectoryName[$InputFileName]<>"init.m";
+If[Not@FileExistsQ[$InitFile],Message[BaikovPackage::initerr,$InitFile]];
+Get[$InitFile];
+If[Not@DirectoryQ[$SingularFilePath],WriteString["stdout","\n!!Please set $SingularFilePath (where the users choose to store temporary files for Singular) in init.m and reload the package!"] ];
+If[Not@FileExistsQ[$SingularPath],WriteString["stdout", "\n!!Please set $SingularPath (which is the executable file of Singular, e.g. /usr/local/bin/Singular) in init.m and reload the package!"] ];
 
 (*dimension calculation*)
 GetDimension::uerr="u should in the form p1^a1...pn^an.`1`";
@@ -70,6 +75,10 @@ ExpandSP::usage="ExpandSP[exp] expand the arguments of SProd[] function.";
 
 CayleyMengerForm::usage="CayleyMengerForm[list,rep] gives the Cayley-Menger form of a gram determinant of momenta list and rep is the variable replacement.";
 
+GetIndExtSProd::usage="GetIndExtSProd[list] generate a set of replacement rules for all scalar products between independent external momenta from the list of rules which define a set of Mandelstam variables used.";
+GetIndExtSProd::inputerr="The input should be a list of rules.";
+GetIndExtSProd::err="The input replacement rule may be wrong. Check whether it is not enough or three are some mistakes.";
+
 GramDet::usage="GramDet[{p1,p2,p3}] calculate the determination of matrix {{p1.p1,p1.p2,p1.p3},{p2.p1,p2.p2,p2.p3},{p3.p1,p3.p2,p3.p3}}. And GramDet[{p1,p2},{q1,q2}] calculates {{p1.p1,p1.p2},{p2.p1,p2.p2}}.";
 
 PD::usage="PD[loopm,extm,f] is used to represent a Feynman denominator. For example, PD[l1+l2,k1,-m2]=(l1+l2+k1)^2-m2";
@@ -78,7 +87,7 @@ LPD::usage="LPD[loopm,extm,f] is used to represent a linear Feynman denominator.
 
 BaikovTrans::usage="BaikovTrans[dlist] gives the transformation between scalar product SProd[] and Baikov variables xi.";
 BaikovTrans::marg="The freedom of denominator list `1` doesn't equal to `2`: the freedom of the integral measure.";
-BaikovTrans::inputerr1="The input form is not right. Please use BaikovTrans[dlist,kinerep] or replace PD[loopm,extm,f] as PD[loopm,extm,f,KeepForm->False].";
+BaikovTrans::inputerr1="The input form has been changed in newer version. Please use new command BaikovTrans[dlist,kinerep] or replace all PD[loopm,extm,f] as PD[loopm,extm,f,KeepForm->False].";
 BaikovTrans::inputerr2="The input form is not right. Please use BaikovTrans[dlist/.kinerep] or replace PD[loopm,extm,f,_] as PD[loopm,extm,f,KeepForm->True].";
 
 BaikovRep::usage="BaikovRep[dlist,llist,elist] calculates the Standard Baikov representation of a given denominator list.";
@@ -419,6 +428,7 @@ CenterDot[p_, 0, OptionsPattern[]] := 0;
 
 CenterDot[0, q_, OptionsPattern[]] := 0; 
 
+SProd[p_] := SProd[p, p];
 SProd[p_, q_, OptionsPattern[]] :=
     If[OptionValue[ExpandQ],
         (CenterDot[p, q] //. {CenterDot[Plus[x_, y__], z_] :> SProd[x,z] + SProd[Plus[y], z], CenterDot[z_, Plus[x_, y__]] :> SProd[x, z]+SProd[Plus[y], z], CenterDot[Times[a_Integer, b_], c_] :> a * SProd[b, c], 
@@ -436,6 +446,16 @@ ExpandSP[exp_]:=Module[{rep},
 ];
 
 CayleyMengerForm[list_,rep_]:=Table[If[i==j,0,If[i==1||j==1,1,SProd[list[[i-1]]-list[[j-1]],list[[i-1]]-list[[j-1]],ExpandQ->True]]],{i,1,Length[list]+1},{j,1,Length[list]+1}]/.rep;
+
+
+GetIndExtSProd[list_,conservation_] :=
+    Module[{sl,sol},
+        If[Union[Head/@list]=!={Rule},Message[GetIndExtSProd::inputerr];Return[$Failed]];
+        sl = Cases[list, _SProd, Infinity]//DeleteDuplicates; (*all the scalar product, they can be solved as a set of independent variables*)
+        sol = Solve[list/.conservation/.{Rule->Equal}//ExpandSP,sl];
+        If[sol==={},Message[GetIndExtSProd::err];Return[$Failed]];
+        Return[sol[[1]]];
+    ]
 
 
 GramDet[list_] :=
@@ -460,25 +480,25 @@ GramDet[list1_, list2_] :=
         (Det[m] /. {CenterDot[a_, b_] :> SProd[a, b, ExpandQ -> True]}) // Factor
     ]; 
 
-SyntaxInformation[PD] = {"ArgumentsPattern" -> {_, _, _}}; 
+SyntaxInformation[PD] = {"ArgumentsPattern" -> {_, _, _, OptionsPattern[]}}; 
 
 Options[PD] = {RepList -> {}, KeepForm -> True}; 
 
 PD[loopm_, extm_, f_, OptionsPattern[]] :=
     Module[{s, l},
-        If[OptionValue[KeepForm],Return[PD[loopm,extm,f,"raw"]]];
+        If[OptionValue[KeepForm],Return[$PD[loopm,extm,f]]];
         s = SProd[loopm, loopm] + 2 SProd[loopm, extm];
         l = SProd[extm, extm] /. OptionValue[RepList];
         Return[{s, l + f}];
     ]; 
 
-SyntaxInformation[LPD] = {"ArgumentsPattern" -> {_, _, _}}; 
+SyntaxInformation[LPD] = {"ArgumentsPattern" -> {_, _, _, OptionsPattern[]}}; 
 
 Options[LPD] = {RepList -> {}, KeepForm -> True}; 
 
 LPD[loopm_, extm_, f_, OptionsPattern[]] :=
     Module[{s, l},
-        If[OptionValue[KeepForm],Return[LPD[loopm,extm,f,"raw"]]];
+        If[OptionValue[KeepForm],Return[$LPD[loopm,extm,f]]];
         s = SProd[loopm, extm];
         l = f /. OptionValue[RepList];
         Return[{s, l}];
@@ -486,7 +506,7 @@ LPD[loopm_, extm_, f_, OptionsPattern[]] :=
 
 BaikovTrans[list_] :=
     Module[{l, v, m, xl, rep},
-        If[Not@FreeQ[list,PD|LPD],Message[BaikovTrans::inputerr1];Return[$Failed]];
+        If[Not@FreeQ[list,$PD|$LPD],Message[BaikovTrans::inputerr1];Return[$Failed]];
         l = Length @ list;
         xl = Table[Subscript[x, i], {i, 1, l}];
         v = Complement[Flatten[Variables /@ list[[All, 1]]],$SYMList] // DeleteDuplicates;
@@ -505,8 +525,8 @@ BaikovTrans[list_] :=
 
 BaikovTrans[dlist_,kinerep_] :=
     Module[{list, l, v, m, xl, rep},
-        If[FreeQ[dlist,PD]&&FreeQ[dlist,LPD],Message[BaikovTrans::inputerr2];Return[$Failed]];
-        list = dlist/.{PD[a_,b_,c_,"raw"]:>PD[a,b,c,KeepForm -> False],LPD[a_,b_,c_,"raw"]:>LPD[a,b,c,KeepForm -> False]}/.kinerep;
+        If[FreeQ[dlist,$PD]&&FreeQ[dlist,$LPD],Message[BaikovTrans::inputerr2];Return[$Failed]];
+        list = dlist/.{$PD[a_,b_,c_]:>PD[a,b,c,KeepForm -> False],$LPD[a_,b_,c_]:>LPD[a,b,c,KeepForm -> False]}/.kinerep;
         l = Length @ list;
         xl = Table[Subscript[x, i], {i, 1, l}];
         v = Complement[Flatten[Variables /@ list[[All, 1]]],$SYMList] // DeleteDuplicates;
@@ -531,8 +551,10 @@ BaikovRep[dlist_, llist_, elist_, OptionsPattern[]] :=
         E = Length @ elist;
         N = L (L + 1) / 2 + L * E;
         $LoopNum=L;
+        $BvNum=Length[dlist];
         WriteString["stdout","The global variable $LoopNum has been set to "<>ToString[$LoopNum]<>"\n"];
-        r = BaikovTrans[dlist/.{PD[a_,b_,c_,"raw"]:>PD[a,b,c,KeepForm -> False],LPD[a_,b_,c_,"raw"]:>LPD[a,b,c,KeepForm -> False]}/. OptionValue[RepList]];
+        WriteString["stdout","The global variable $BvNum has been set to "<>ToString[$BvNum]<>"\n"];
+        r = BaikovTrans[dlist/.{$PD[a_,b_,c_]:>PD[a,b,c,KeepForm -> False],$LPD[a_,b_,c_]:>LPD[a,b,c,KeepForm -> False]}/. OptionValue[RepList]];
         If[r == 0,
             Return[0]
         ];
@@ -1086,8 +1108,9 @@ ExtractLoopOrder[rep_]:=Module[{list,listk,pos,ext,loop},
 ];
 
 
-Options[GetBaikovMatRep] = {"ExcVar" -> {}, "looporder"-> 2, "ForceAdd" -> 0, deBug-> False}; 
+Options[GetBaikovMatRep] = {"ExcVar" -> {}, "looporder"-> $LoopNum, "ForceAdd" -> 0, deBug-> False}; 
 
+GetBaikovMatRep[result_, var_, OptionsPattern[]] := GetBaikovMatRep[result, var, $BvNum, "ExcVar" -> OptionValue["ExcVar" ], "looporder"-> OptionValue["looporder"], "ForceAdd" -> OptionValue["ForceAdd"], deBug -> OptionValue[deBug]];
 GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
     Module[{intv, l, k = 1, tem, pos, temp, res = {}, flag, len, flag1, c},
         intv = Complement[Table[i, {i, 1, n}], Join[var, OptionValue["ExcVar"]]] // ReverseSort;
