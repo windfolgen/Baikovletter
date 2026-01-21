@@ -103,7 +103,7 @@ ReArrangeGram::err="flag can only be -1 or 1. flag: `1`";
 
 ReduceMat::usage="ReduceMat[{g,power},pos,coef] reduces the Gram Matrix g by using recursive formula. coef is the coefficient of the variable to be reduced in the matrix.";
 
-SimplifyGram::usage="SimplifyGram[gl,rep] simplifies the Gram matrix list provided. rep is the kinematics replacement rule.";
+SimplifyGram::usage="SimplifyGram[gl,rep] simplifies the Gram matrix list gl provided. rep is the kinematics replacement rule. It purpose is combine those identical Gram determinants which may look very different";
 
 ZeroSectorMatQ::usage="ZeroSectorMatQ[gl,rep] decides whether this sector is zero no matter whether it has those propagators or not by its u.";
 ZeroSectorMatQ::warning="This sector doesn't contain any baikov variables!";
