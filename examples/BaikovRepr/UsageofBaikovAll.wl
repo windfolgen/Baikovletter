@@ -73,7 +73,7 @@ PolySymCheck[poly,symrule[[2]]]
 
 (*4. get all zero sectors derived from Baikov representation*)
 zerolist=GetMatZeroSector[resultmat,$BvNum,{8,9}](*the last list is where the isps locate in dlist*)
-PadRight[Reverse[IntegerDigits[#,2]],$BvNum]&/@zerolist (*loop up these sector numbers as binary lists*)
+PadRight[Reverse[IntegerDigits[#,2]],$BvNum]&/@zerolist (*look up these sector numbers as binary lists*)
 
 
 (* ::Section:: *)
@@ -168,7 +168,7 @@ GetBaikovMatRep[resultmat,{1,2,3,4,5,6,7,8,9}]//Simplify
 
 
 (* ::Section:: *)
-(*five-loop banana: Derive representation starting from somewhere not be the standard representation*)
+(*five-loop banana: Derive representation starting from somewhere not being the standard representation*)
 
 
 dlist={
@@ -223,6 +223,4 @@ toprep//Length
 (*half in integer power, half in half-integer power*)
 toprep[[1]]//Simplify
 toprep[[-1]]//Simplify
-
-
 
