@@ -673,7 +673,8 @@ LocatePos[matlist_, v_] :=
     Module[{pos},
         Return[
             Table[
-                pos = Take[#, 2]& /@ Position[UpperTriangularize[matlist[[i]]], v];
+                pos = Position[Map[FreeQ[#,v]&,UpperTriangularize[matlist[[i]]],{2}], False];
+                (*pos = Take[#, 2]& /@ Position[UpperTriangularize[matlist[[i]]], v]//DeleteDuplicates;*)
                 If[pos === {},
                     Null
                     ,
@@ -711,6 +712,7 @@ ReArrangeGram[g_, pos_, ratio_, flag_] :=
         (*Table[row[[pl[[i]]]]=row[[pl[[i]]]]-ratio[[i]]*row[[pl[[-1]
             ]]],{i,1,Length[pl]-1}];Table[col[[pl[[i]]]]=col[[pl[[i]]]]-ratio[[i]
             ]*col[[pl[[-1]]]],{i,1,Length[pl]-1}];*)
+        (*If[Head[g][row, col]===G[{0},{0}],Print["something wrong here: ","g: ",g," pos:", pos, "ratio: ",ratio,"flag: ",flag]];*)
         Return[Head[g][row, col]];
         
     ]; 
@@ -731,10 +733,10 @@ ReduceMat[{g_, power_}, pos_, coef_] :=
         ];
         r1 = Delete[row, pos[[1]]];
         c1 = Delete[col, pos[[1]]];
-        AppendTo[result, {Head[g][r1, c1], power + 1 / 2}];
+        AppendTo[result, {Head[g][r1, c1], power + 1/2}];
         r1 = Delete[row, pos[[2]]];
         c1 = Delete[col, pos[[2]]];
-        AppendTo[result, {Head[g][r1, c1], power + 1 / 2}];
+        AppendTo[result, {Head[g][r1, c1], power + 1/2}];
         Return[AppendTo[result, c]];
         
     ]; 
@@ -928,9 +930,9 @@ ReduceRep[pl_, v_, rep_, OptionsPattern[]] :=
                 ratio =
                     Table[
                         If[pos[[i, 1]] == pos[[i, 2]],
-                            1 / 2 elm[[i]] / elm[[-1]]
+                            1/2 elm[[i]]/elm[[-1]] //Factor
                             ,
-                            elm[[i]] / elm[[-1]]
+                            elm[[i]]/elm[[-1]] //Factor
                         ]
                         ,
                         {i, 1, Length[elm]}

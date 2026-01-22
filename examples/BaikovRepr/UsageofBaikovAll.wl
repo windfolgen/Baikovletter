@@ -164,7 +164,7 @@ Export[current<>"para_rep.wxf",resultmat,PerformanceGoal->"Size"];
 Options[GetBaikovMatRep]
 
 
-GetBaikovMatRep[resultmat,{1,2,3,4,5,6,7,8,9}]//Simplify
+GetBaikovMatRep[resultmat,{1,2,3,4,5,6,7,8,9}]
 
 
 (* ::Section:: *)
