@@ -76,7 +76,7 @@ zerolist=GetMatZeroSector[resultmat,$BvNum,{8,9}](*the last list is where the is
 PadRight[Reverse[IntegerDigits[#,2]],$BvNum]&/@zerolist (*look up these sector numbers as binary lists*)
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Linear propagator involved*)
 
 
@@ -164,7 +164,7 @@ Export[current<>"para_rep.wxf",resultmat,PerformanceGoal->"Size"];
 Options[GetBaikovMatRep]
 
 
-GetBaikovMatRep[resultmat,{1,2,3,4,5,6,7,8,9}]
+GetBaikovMatRep[resultmat,{1,2,3,4,5,6}](*this is a zero sector as we can see since the family involving only first six propagators is scaleless*)
 
 
 (* ::Section:: *)

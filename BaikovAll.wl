@@ -118,7 +118,7 @@ AllSectorBaikovMatC::usage="AllSectorBaikovMatC[resultmat,var,krep] continues th
 
 ExtractLoopOrder::usage="ExtractLoopOrder[krep] extracts the number of loops involved from the replacement rule krep.";
 GetBaikovMatRep::usage="GetBaikovMatRep[result,var,n] gets the Baikov representation for given variables var. n is the number of Baikov variables. For example, var={1,2,3}. Option \"ExcVar\" gives the variables that must not be integrated out, that is, they will keep in the representation. It can be {9,10} for example. Option \"looporder\" is the loop number of the integral family, e.g. for two loop family it is 2.";
-GetBaikovMatRep::zero="This is a zero sector.";
+GetBaikovMatRep::zero="This is a zero sector with the following variables being integrated out: `1`";
 GetBaikovMatRep::err="All variables have been integrated out.";
 
 
@@ -727,7 +727,7 @@ ReduceMat[{g_, power_}, pos_, coef_] :=
         r1 = Delete[row, {{pos[[1]]}, {pos[[2]]}}];
         c1 = Delete[col, {{pos[[1]]}, {pos[[2]]}}];
         If[r1 =!= {} && c1 =!= {},
-            AppendTo[result, {-Head[g][r1, c1], -power - 1}]
+            AppendTo[result, {-Head[g][r1, c1], -power - 1}](*we should be careful of the case where is gram is 0. It is coefficient of the quadratic term of variable, so if it is 0, the expression will be 0 since the integration region shrink to 0*)
             ,
             c = c * Power[-1, -power - 1]
         ];
@@ -959,6 +959,7 @@ ReduceRep[pl_, v_, rep_, OptionsPattern[]] :=
                 Print["tem (matrix rearranged): ", tem]
             ];
             tem = ReduceMat[{tem, pl[[i, 2]]}, pos[[flag]], coef];
+            (*here we need to be careful whether the coefficient is 0, the first element of tem is the coefficient of quadratic term, if it is 0, we will take this sector as zero sector*)
             con = tem[[-1]];(*extract the constant term after the recursion*)
             tem = Drop[tem, -1];
             tem = Join[Delete[pl, i], tem];(*Delete the origin matrix*)
@@ -1134,6 +1135,7 @@ GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
                 Continue[]
             ];
             temp = tem[[All, 1]];
+            flag1=0;
             Do[
                 If[Length[Intersection[temp[[j]], intv]] > l - k,
                     If[res==={},(*this sector aims to find all representations that are independent*)
@@ -1152,9 +1154,9 @@ GetBaikovMatRep[result_, var_, n_, OptionsPattern[]] :=
 	                        If[flag1==0,AppendTo[res,tem[[j]]]]
 	                    ]
                     ];
-                    If[tem[[j, 2, 2]] === 0,
-                        Message[GetBaikovMatRep::zero];
-                        Break[]
+                    If[tem[[j, 2, 2]] === 0 && flag1 === 0,
+                        Message[GetBaikovMatRep::zero,tem[[j,1]]];
+                        (*Break[]*)
                     ]
                 ]
                 ,
