@@ -1,0 +1,84 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 14.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      2430,         76]
+NotebookOptionsPosition[      1675,         56]
+NotebookOutlinePosition[      2072,         72]
+CellTagsIndexPosition[      2029,         69]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["This is  the test notebook for Package BaikovLetter.wl.", "Text",
+ CellChangeTimes->{{3.981082001386196*^9, 
+  3.98108202604429*^9}},ExpressionUUID->"3d4299a2-e935-4804-92ea-\
+476bcac7cded"],
+
+Cell[CellGroupData[{
+
+Cell["Test the load", "Subsection",
+ CellChangeTimes->{{3.981082051351632*^9, 
+  3.981082054074335*^9}},ExpressionUUID->"4831d1c3-450e-4203-8dac-\
+322952dd15d2"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Quit", "[", "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.981082081441029*^9, 3.981082082576982*^9}},
+ CellLabel->
+  "In[186]:=",ExpressionUUID->"8c41fe95-e860-47b2-8e02-c2961436954b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+  "Get", "[", 
+   "\"\</Users/windfolgen/GitRepos/Baikovletter/BaikovLetter.wl\>\"", "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.981082061321286*^9, 3.981082063307345*^9}, {
+  3.981104824968192*^9, 
+  3.9811048604730873`*^9}},ExpressionUUID->"a3840978-341a-4f03-a59d-\
+be15f9f7d090"]
+}, Open  ]],
+
+Cell["Test for IsReducible", "Subsection",
+ CellChangeTimes->{{3.981083385808386*^9, 
+  3.981083394574589*^9}},ExpressionUUID->"0a5a4e9d-2bb0-416c-bb3d-\
+380fe134a770"]
+},
+WindowSize->{808, 687},
+WindowMargins->{{Automatic, 208}, {1, Automatic}},
+FrontEndVersion->"14.0 for Mac OS X ARM (64-bit) (December 12, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"3db7e1b5-34bb-4f87-bcb8-81d5b24096a5"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 196, 3, 35, "Text",ExpressionUUID->"3d4299a2-e935-4804-92ea-476bcac7cded"],
+Cell[CellGroupData[{
+Cell[779, 27, 161, 3, 54, "Subsection",ExpressionUUID->"4831d1c3-450e-4203-8dac-322952dd15d2"],
+Cell[943, 32, 219, 5, 30, "Input",ExpressionUUID->"8c41fe95-e860-47b2-8e02-c2961436954b"],
+Cell[1165, 39, 323, 9, 30, "Input",ExpressionUUID->"a3840978-341a-4f03-a59d-be15f9f7d090"]
+}, Open  ]],
+Cell[1503, 51, 168, 3, 54, "Subsection",ExpressionUUID->"0a5a4e9d-2bb0-416c-bb3d-380fe134a770"]
+}
+]
+*)
+

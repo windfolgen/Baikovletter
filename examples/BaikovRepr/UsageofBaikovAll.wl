@@ -6,7 +6,7 @@
 
 (*using same way of loading as AMflow and Blade*)
 current = If[$FrontEnd===Null,$InputFileName,NotebookFileName[]]//DirectoryName;
-Get[current<>"../../"<>"BaikovAll.wl"];
+Get[current<>"../../"<>"Baikov.wl"];
 
 
 (* ::Section:: *)
@@ -76,7 +76,7 @@ zerolist=GetMatZeroSector[resultmat,$BvNum,{8,9}](*the last list is where the is
 PadRight[Reverse[IntegerDigits[#,2]],$BvNum]&/@zerolist (*look up these sector numbers as binary lists*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Linear propagator involved*)
 
 

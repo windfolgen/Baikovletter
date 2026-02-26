@@ -12,14 +12,14 @@ The corresponding Baikov representation will be like const*Power[Gram1,power1]*P
 If you find any bug or suggest for this program, please contact: phamapku14@gmail.com
 *)
 
-WriteString["stdout","BaikovAll: a package for generating Baikov representations for a given Feynman integral family.\n"];
+WriteString["stdout","Baikov: a package for generating Baikov representations for a given Feynman integral family.\n"];
 
 BeginPackage["Baikov`"];
 
 
 x::usage="the variable for Baikov representation";
 y::usage="the variable for Baikov representation";
-G::usage="The function for Feynman integrals";
+G::usage="The function for inner representation of Gram or head of Feynman integrals";
 j::usage="The function for Feynman integrals in LiteRed";
 \[Epsilon]::usage="the parameter for dimentional regularization";
 R::usage="Possible alias for square roots.";
@@ -126,7 +126,7 @@ AllSubSector::usage="AllZeroSector[zeroset] generates all sector from a set of s
 GetMatZeroSector::usage="GetMatZeroSector[allbaikovlist,n,isp] extracts the information about zero sectors from the output of AllSectorBaikov[]. n is the number of Baikov variables and isp is the list of isp's like {8,9}.";
 
 GramMat::usage="GramMat[l1,l2,rep] gives the Gram matrix for G[l1,l2]. rep is kinematics replacement rule.";
-
+Gram2Mat::usage="Gram2Mat[exp,krep] transforms all the G[l1,l2] expressions to Gram in matrix form. rep is kinematics replacement rule.";
 Gram2Poly::usage="Gram2Poly[exp,krep] transforms all the G[l1,l2] expressions to polynomials. krep is the kinematics replacement rule.";
 
 
@@ -595,6 +595,7 @@ BaikovRep[dlist_, llist_, elist_, OptionsPattern[]] :=
 
 GramMat[l1_,l2_,rep_]:=Table[SProd[l1[[i]],l2[[j]]],{i,1,Length[l1]},{j,1,Length[l2]}]//.rep//Factor;
 Gram2Poly[exp_,krep_]:=exp/.{G[x_,y_]:>(GramMat[x,y,krep]//Det//Factor)};
+Gram2Mat[exp_,krep_]:=exp/.{G[x_,y_]:>(GramMat[x,y,krep]//Factor)};
 
 
 Options[ToCanonicalForm] = {Form -> 0, Cut -> False, deBug -> False};
