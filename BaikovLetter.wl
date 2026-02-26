@@ -41,14 +41,20 @@ Digits2Sector::usage="Digits2Sector[digits] transforms a digital number to a sec
 
 MatrixPosition::usage="MaxtriPosition[mat,fun] gives positions of element which satisfy fun[element]===True in matrix 'mat'.";
 ManifestFactorized::usage="ManifestFactorized[mat,gram] return the factorized result if a matrix 'mat' is manifestly factorized. 'gram' is the corresponding Gram representation of this matrix.";
+
+ExistRelationQ::usage="ExistRelationQ[list] find whether there are nontrivial linear relations with integer coefficients among elements in 'list'.";
 CongruenceTrans::usage="CongruenceTrans[mat,gram] tries to find a congruence transformation that makes the matrix 'mat' manifestly factorized. 'gram' is the corresponding Gram representation of this matrix. It returns another gram which is congruent to the original one. The congruence transformation lies in integer domain.";
+
 IsReducible::usage="IsReducible[gram,cut,krep] checks whether 'gram' is reducible under the cut condition 'cut','krep' is the replacement rule for Baikov variables and scalar products. If 'gram' is reducible, it will return the reduced result which should be a product (perfect square) of Grams. If 'gram' is not reducible, it will return original gram.\n The output is in the form {Ture/False,results}";
 
 
 IsReducible::warning="The gram matrix `1` is 0 under the cut condition `2`.";
 
 
-(* ::Subsection::Closed:: *)
+Begin["`Private`"]
+
+
+(* ::Subsection:: *)
 (*General Functions*)
 
 
@@ -89,23 +95,27 @@ Digits2Sector[digits_]:=Position[IntegerDigits[digits,2]//Reverse,1]//Flatten;
 MatrixPosition[mat_,fun_]:=Position[Map[fun,mat,{2}],True];
 
 
-ManifestFactorized[mat_,gram_G]:=Catch@Module[{pos,len,int,row,max,temc,temr},
+Options[ManifestFactorized]={"debug"->False};
+ManifestFactorized[omat_,gram_G,OptionsPattern[]]:=Catch@Module[{mat,pos,len,int,row,max,temc,temr},
+	mat=omat//Factor;
 	len=Length[mat];(*the dimension of a square matrix*)
 	pos=MatrixPosition[mat,#===0&]//GatherBy[#,First]&;(*gather by rows*)
+	If[OptionValue["debug"],Print["pos: ",pos]];
 	Do[
 		If[Length[pos]<i,Throw[gram]];(*if the number of rows containing 0 are less than i, return original results*)
 		row=Subsets[#[[All,2]]&/@pos,{i}];(*extract indices for rows and generate i-pairs of them*)
 		int=Length/@(Intersection@@@row);(*check length of intersection for each pair*)
 		max=Max[int];
 		If[max<len-i,
-			Throw[gram],(*if number of 0's is less than the remaining dimension, then the matrix can not be factorized*)
+			Continue[],(*if number of 0's is less than the remaining dimension, then the matrix can not be factorized*)
 			If[max>len-i,Throw[0]](*if number of 0's is larger than the remaining dimension, then the matrix is 0*)
 		];
 		temc=Extract[row,Position[int,max][[1]]];
 		temr=Select[pos,MemberQ[temc,#[[All,2]]]&,i];(*we only need to find i such rows that can give the max intersection number*)
 		temr={temr[[All,1,1]],Complement[Range[len],temr[[All,1,1]]]};(*{rows containing 0, rows not containing 0}*)
 		temc={Intersection@@temc,Complement[Range[len],Intersection@@temc]};(*{columns containing 0, columns not containing 0}*)
-		Throw[Power[-1,Total[temc]+Total[temr]]*ManifestFactorized[mat[[temr[[1]],temc[[2]]]],G[gram[[1,temr[[1]]]],gram[[2,temc[[2]]]]]]*ManifestFactorized[mat[[temc[[1]],temr[[2]]]],G[gram[[1,temc[[1]]]],gram[[2,temr[[2]]]]]]](*calculate the factorization recursively*)
+		If[OptionValue["debug"],Print["row info: ",temr];Print["column info: ",temc];];
+		Throw[Power[-1,Total[temc[[2]]]+Total[temr[[1]]]]*ManifestFactorized[mat[[temr[[1]],temc[[2]]]],G[gram[[1,temr[[1]]]],gram[[2,temc[[2]]]]]]*ManifestFactorized[mat[[temc[[1]],temr[[2]]]],G[gram[[1,temc[[1]]]],gram[[2,temr[[2]]]]]]](*calculate the factorization recursively*)
 	,{i,1,len}];
 	Throw[gram];
 ];
@@ -117,21 +127,24 @@ ExistRelationQ[list_]:=Catch@Module[{len,sys,c,cv,var,numrep,sol},
 	var=Variables[list];
 	numrep=Thread@Rule[var,RandomPrime[{10000,100000},Length[var]]];(*generate a set of random values for variables*)
 	cv=(c/@Range[len]);
-	sys=Join[{(cv) . (list/.numrep)==0},Thread@LessEqual[Abs/@(cv),1],{cv . cv>0}];
+	sys={(cv) . (list/.numrep)==0};
+	sys=Join[sys,Thread@LessEqual[Abs/@(cv),1],Thread@Equal[Complement[cv,Cases[sys,c[_],Infinity]],0],{cv . cv>0}];
 	sol=FindInstance[And@@sys,cv,Integers];(*find a linear combination that gives 0*)
 	If[sol==={},Throw[False],sol=sol[[1]]];
 	Throw[cv/.sol];(*return the combination*)
 ];
 
 
-CongruenceTrans[mat_,gram_G]:=Module[{trans,cong,tem,tem1},
+Options[CongruenceTrans]={"debug"->False};
+CongruenceTrans[mat_,gram_G,OptionsPattern[]]:=Module[{trans,cong,tem,tem1},
 	cong=IdentityMatrix[Length[mat]];
 	trans=mat//Transpose;
 	tem1=gram;
 	Do[
 			tem=ExistRelationQ[trans[[i]]];
+			If[OptionValue["debug"],Print["ExistRelationQ: ",tem]];
 			If[tem===False,Continue[]];
-			cong[[FirstPosition[tem,_?(#=!=0&)][[1]]]]=tem;
+			cong[[FirstPosition[tem,_?(#!=0&)][[1]]]]=tem;
 			tem1=ManifestFactorized[cong . mat . Transpose[cong],G[cong . gram[[1]],cong . gram[[2]]]];
 			If[tem1=!=gram,Break[],Continue[]];
 	,{i,1,Length[trans]}];
@@ -139,16 +152,19 @@ CongruenceTrans[mat_,gram_G]:=Module[{trans,cong,tem,tem1},
 ];
 
 
-IsReducible[gram_G,cut_,krep_]:=Module[{mat,cutsys,cutsol,tem},
+Options[IsReducible]={"debug"->False};
+IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 	mat=gram//Gram2Mat[#,krep]&;(*transform the gram to matrix form*)
 	cutsys=Thread@Equal[cut,0]//Gram2Mat[#,krep]&;(*solve the cut system for Baikov variables*)
 	cutsol=Solve[cutsys,Cases[cutsys,Subscript[x,_],Infinity]//DeleteDuplicates][[1]];
 	mat=mat/.cutsol//Factor;
+	If[OptionValue["debug"],Print["mat: ",MatrixForm[mat]]];
 	
 	(*check whether the gram is manifestly factorizable*)
 	tem=ManifestFactorized[mat,gram];
 	If[tem===0,Message[IsReducible::warning,gram,cut]];
 	If[tem=!=gram,Return[{True,tem}]];
+	If[OptionValue["debug"],Print["tem: ",tem]];
 	
 	(*if it is not manifestly factorized, it can still possibly be factorzied after congruence transformation*)
 	tem=CongruenceTrans[mat,gram];
