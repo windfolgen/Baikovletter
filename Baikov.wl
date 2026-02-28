@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (*
-Package Name: BaikovAll
+Package Name: Baikov
 Version: 1.1.0
 Description: Generate all Baikov representation in an integral family by analyzing the Gram matrix and integrate variables one-by-one. It also provides some tools to analyze the Baikov representation.
 The output will be in the form:
@@ -103,13 +103,16 @@ ReArrangeGram::err="flag can only be -1 or 1. flag: `1`";
 
 ReduceMat::usage="ReduceMat[{g,power},pos,coef] reduces the Gram Matrix g by using recursive formula. coef is the coefficient of the variable to be reduced in the matrix.";
 
-SimplifyGram::usage="SimplifyGram[gl,rep] simplifies the Gram matrix list gl provided. rep is the kinematics replacement rule. It purpose is combine those identical Gram determinants which may look very different";
+SimplifyGram::usage="SimplifyGram[gl,rep] simplifies the Gram matrix list gl provided. rep is the kinematics replacement rule. It purpose is to combine those identical Gram determinants which may look very different";
 
 ZeroSectorMatQ::usage="ZeroSectorMatQ[gl,rep] decides whether this sector is zero no matter whether it has those propagators or not by its u.";
 ZeroSectorMatQ::warning="This sector doesn't contain any baikov variables!";
 
 ReduceRep::usage="ReduceRep[pl,v,rep] finds whether v in pl is reducible. If it is true, then return the results after reduction. If not, return False.";
 ReduceRep::devoid="There is no variable `1` in the expression. There must be something wrong.";
+
+IndependentVar::usage="IndependentVar[mat,isp] find possible redefinition of 'isp' so that the independent variables in 'mat' are reduced.";
+NewReducibleRep::usage="NewReducibleRep[pl,isp,krep] finds whether the representation can be further reduced to new one after redefinition of isps. It only returns new-type reduced representation, not considering cases where representation is reduced without redefinition of isps. ";
 
 AllSectorBaikovMat::err="there must be something wrong with path `1` and the variable `2`.";
 AllSectorBaikovMat::usage="AllSectorBaikovMat[list,rep] generate all Baikov representation from the list provided, list is in the form {{{Gram1,power1},{Gram2,power2},...},const}.";
@@ -887,7 +890,7 @@ ReduceRep[pl_, v_, rep_, OptionsPattern[]] :=
             ];
             If[pos === {},
                 Message[ReduceRep::devoid, v];
-                Export["./debug.m", {pl, v, rep}];
+                Export[DirectoryName[$InputFileName]<>"debug.m", {pl, v, rep}];
                 Throw[$Failed]
             ];(*if v has not been found, then there must be something wrong*)
             If[Length[pos] > 1,
@@ -976,6 +979,61 @@ ReduceRep[pl_, v_, rep_, OptionsPattern[]] :=
             Throw[{result, con}];
             
         ]; 
+
+Options[IndependentVar] = {deBug -> False};
+
+IndependentVar[mat_,isp_,OptionsPattern[]]:=Module[{len,var,coeff,trans,tem},
+	(*this function is used to detect the independent variables in a matrix and give the transformation of isps to get these independent variables*)
+	var=Cases[mat,Subscript[x,_],Infinity]//DeleteDuplicates//ReverseSortBy[#,MemberQ[isp,#]&]&;
+	If[OptionValue[deBug],Print["var: ",var]];
+	len=Intersection[var,isp]//Length;(*the number of isps in this matrix*)
+	If[len==0,Return[{var,{}}]];(*if there are no isps in the Gram matrix, then the independent variables are directly propagators, since they can not be redefined*)
+	coeff=Normal[CoefficientArrays[#,var][[2]]]&/@(Flatten[mat,1]//DeleteCases[#,_?(FreeQ[#,x]&)]&)//DeleteDuplicates//RowReduce;
+	trans=Solve[Thread@Equal[Take[var,len]/.{x->y},Take[coeff,len] . var],Take[var,len]][[1]]/.{y->x};(*get the replacement rule for old isp variables*)
+	If[OptionValue[deBug],Print["trans: ",trans]];
+	tem=Drop[coeff,len];
+	If[tem==={},Return[{Take[coeff,len] . var,trans}]];(*if only isps exist in the matrix*)
+	Return[{Join[Take[coeff,len] . var,Cases[tem . var,Subscript[x,_],Infinity]//DeleteDuplicates],trans}];(*in this nontrivial case, some variables may be absorbed in to the redefinition of isps.*)
+];
+
+Options[NewReducibleRep] = {deBug -> False, "sector"->{}};
+
+NewReducibleRep[pl_, isp_, krep_, OptionsPattern[]]:= Catch@Module[{gl,mat,xl,nisp,pos,var,temvar,trans,nkrep},
+	(*this function allows the redefinition of isps in 'isp' to check whether the representation can be further reduced after redefinition.*)
+	gl=pl[[All,1]]; (*the list of grams*)
+	mat=gl//Gram2Mat[#,krep]&;
+	xl=Cases[mat,Subscript[x,_],Infinity]//DeleteDuplicates;(*all Baikov variables involved*)
+	nisp=isp;
+	var=Reap[(*we pick up those variables that can not be integrated out at first sight*)
+		Do[
+			pos=LocatePos[mat, xl[[i]]];
+			If[Length[pos]==1,Continue[],Sow[xl[[i]]]];(*such cases is already included in our derivation of all Baikov representations*)
+		,{i,1,Length[xl]}]
+	][[2]];
+	If[var==={},Print["    NewReducibleRep: no new-type representation can be generated!"];Throw[{False,pl}],var=var[[1]]];(*if all variables can be integrated out recursively, then no new type representations arise*)
+	var=Complement[var,Subscript[x,#]&/@OptionValue["sector"]];(*we remove those variables which are claimed as propagators, they can definitely not be integrated out*)
+	(*Print["sec: ",Subscript[x,#]&/@OptionValue["sector"]];Print["var: ",var//FullForm];*)
+	If[OptionValue[deBug],Print["var: ",var]];
+	
+	(*now we check whether the redefinition of isps can bring any variable reducible (which means it only appears in one gram)*)
+	(*the first step is to check whether the number of independent scalar products is less than the number of Baikov variables appearing in it*)
+	(*we track the spurious variable and the transformation that can remove it for every gram*)
+	temvar=Table[IndependentVar[mat[[i]],isp],{i,1,Length[mat]}];
+	trans=(DeleteDuplicates/@(temvar[[All,2]]//Flatten//GatherBy[#,First]&))//Tuples;(*all the different transformation rules for isps*)
+	If[OptionValue[deBug],Print["temvar: ",temvar];Print["trans: ",trans]];
+	Do[
+		Do[
+			pos=Position[FreeQ[#,var[[j]]]&/@(temvar[[All,1]]/.trans[[i]]//Factor),False,1];
+			If[OptionValue[deBug],Print["var: ",var[[j]]];Print["pos: ",pos]];
+			If[Length[pos]==1,
+				nkrep=krep/.trans[[i]]//Factor;
+				Print["    NewReducibleRep: new-type representation found by integrating ",var[[j]]/.{Subscript[x,a_]:>x[a]}," with redefinition of isps: ",trans[[i]]/.{Subscript[x,a_]:>x[a]}];
+				Throw[{True,ReduceRep[pl, var[[j]], nkrep],trans[[i]]}]
+			];
+		,{j,1,Length[var]}];
+	,{i,1,Length[trans]}];
+	Print["    NewReducibleRep: no new-type representation can be generated!"];Throw[{False,pl}];
+];
 
 Options[AllSectorBaikovMat] = {Exc -> {}, deBug -> False}; 
 

@@ -17,7 +17,7 @@ If you find any bug or suggest for this program, please contact: phamapku14@gmai
 
 $BaikovPath = DirectoryName[$InputFileName];
 If[FreeQ[$Path,$BaikovPath],PrependTo[$Path,$BaikovPath]];(*Load Baikov` package first*)
-(*Get["Baikov`"];*)
+Get["Baikov`"];
 
 
 WriteString["stdout","BaikovLetter: a package for analysing singularity for all kinds of families and \n generating candidate rational letters and algebraic letters for families which belong to MPL functions.\n"];
@@ -49,6 +49,9 @@ IsReducible::usage="IsReducible[gram,cut,krep] checks whether 'gram' is reducibl
 
 
 IsReducible::warning="The gram matrix `1` is 0 under the cut condition `2`.";
+
+
+LeadingSingularities::usage="LeadingSingularities[rep,cut,krep] gives all the leading singularities related to a representation 'rep'. 'cut' is a set of conditions which specify propagators being cut, 'krep' is the replacement rule for scalar products. ";
 
 
 Begin["`Private`"]
@@ -115,7 +118,7 @@ ManifestFactorized[omat_,gram_G,OptionsPattern[]]:=Catch@Module[{mat,pos,len,int
 		temr={temr[[All,1,1]],Complement[Range[len],temr[[All,1,1]]]};(*{rows containing 0, rows not containing 0}*)
 		temc={Intersection@@temc,Complement[Range[len],Intersection@@temc]};(*{columns containing 0, columns not containing 0}*)
 		If[OptionValue["debug"],Print["row info: ",temr];Print["column info: ",temc];];
-		Throw[Power[-1,Total[temc[[2]]]+Total[temr[[1]]]]*ManifestFactorized[mat[[temr[[1]],temc[[2]]]],G[gram[[1,temr[[1]]]],gram[[2,temc[[2]]]]]]*ManifestFactorized[mat[[temc[[1]],temr[[2]]]],G[gram[[1,temc[[1]]]],gram[[2,temr[[2]]]]]]](*calculate the factorization recursively*)
+		Throw[Power[-1,Total[temc[[2]]]+Total[temr[[1]]]]*ManifestFactorized[mat[[temr[[1]],temc[[2]]]],G[gram[[1,temr[[1]]]],gram[[2,temc[[2]]]]]]*ManifestFactorized[mat[[temc[[1]],temr[[2]]]],G[gram[[2,temc[[1]]]],gram[[1,temr[[2]]]]]]](*calculate the factorization recursively*)
 	,{i,1,len}];
 	Throw[gram];
 ];
@@ -168,7 +171,16 @@ IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 	
 	(*if it is not manifestly factorized, it can still possibly be factorzied after congruence transformation*)
 	tem=CongruenceTrans[mat,gram];
-	If[tem[[2]]=!=gram,Return[{True,tem[[2]]}],Return[{False,gram}]];
+	If[tem[[2]]=!=gram,
+		(*try to reduce it recursively so that its simplest form achieved*)
+		If[Head[tem[[2]]]===G,Return[{True,IsReducible[tem[[2]],cut,krep][[2]]}],Return[{True,tem[[2]]}]],
+		Return[{False,gram}]
+	];
+];
+
+
+LeadingSingularities[rep_,cut_,krep_,OptionsPattern[]]:=Module[{},
+	aa
 ];
 
 
