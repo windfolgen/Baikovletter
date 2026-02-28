@@ -179,8 +179,10 @@ IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 ];
 
 
-LeadingSingularities[rep_,cut_,krep_,OptionsPattern[]]:=Module[{},
-	aa
+LeadingSingularities[rep_,cut_,krep_,OptionsPattern[]]:=Module[{newrep},
+	(*'rep' is a basic element from the output of AllSectorBaikovMat[]. Its form is {{variables already integrated out},{glist,const}}*)
+	(*for the first step, we check whether new representation can be generated*)
+	newrep=NewReducibleRep[rep[[2,1]],{Subscript[x, 9],Subscript[x, 10],Subscript[x, 11]},krep,deBug->True,"sector"->{2,3,4,5,6,7,8}]
 ];
 
 

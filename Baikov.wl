@@ -982,18 +982,20 @@ ReduceRep[pl_, v_, rep_, OptionsPattern[]] :=
 
 Options[IndependentVar] = {deBug -> False};
 
-IndependentVar[mat_,isp_,OptionsPattern[]]:=Module[{len,var,coeff,trans,tem},
+IndependentVar[mat_,isp_,OptionsPattern[]]:=Module[{len,var,coeff,row,trans,tem,indisp},
 	(*this function is used to detect the independent variables in a matrix and give the transformation of isps to get these independent variables*)
 	var=Cases[mat,Subscript[x,_],Infinity]//DeleteDuplicates//ReverseSortBy[#,MemberQ[isp,#]&]&;
 	If[OptionValue[deBug],Print["var: ",var]];
 	len=Intersection[var,isp]//Length;(*the number of isps in this matrix*)
 	If[len==0,Return[{var,{}}]];(*if there are no isps in the Gram matrix, then the independent variables are directly propagators, since they can not be redefined*)
 	coeff=Normal[CoefficientArrays[#,var][[2]]]&/@(Flatten[mat,1]//DeleteCases[#,_?(FreeQ[#,x]&)]&)//DeleteDuplicates//RowReduce;
-	trans=Solve[Thread@Equal[Take[var,len]/.{x->y},Take[coeff,len] . var],Take[var,len]][[1]]/.{y->x};(*get the replacement rule for old isp variables*)
+	row=Select[coeff,(FirstPosition[#,_?(#!=0&)][[1]]<=len)&];(*select those combinations that are related to isps*)
+	indisp=var[[FirstPosition[#,_?(#!=0&)][[1]]&/@row]];(*find the independent isps that should be redefined*)
+	trans=Solve[Thread@Equal[indisp/.{x->y},row . var],indisp][[1]]/.{y->x};(*get the replacement rule for old isp variables*)
 	If[OptionValue[deBug],Print["trans: ",trans]];
-	tem=Drop[coeff,len];
-	If[tem==={},Return[{Take[coeff,len] . var,trans}]];(*if only isps exist in the matrix*)
-	Return[{Join[Take[coeff,len] . var,Cases[tem . var,Subscript[x,_],Infinity]//DeleteDuplicates],trans}];(*in this nontrivial case, some variables may be absorbed in to the redefinition of isps.*)
+	tem=Complement[coeff,row];
+	If[tem==={},Return[{row . var,trans}]];(*if only isps exist in the matrix*)
+	Return[{Join[row . var,Cases[tem . var,Subscript[x,_],Infinity]//DeleteDuplicates],trans}];(*in this nontrivial case, some variables may be absorbed in to the redefinition of isps.*)
 ];
 
 Options[NewReducibleRep] = {deBug -> False, "sector"->{}};
