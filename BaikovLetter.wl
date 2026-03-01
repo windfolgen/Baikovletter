@@ -179,17 +179,29 @@ IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 ];
 
 
-LeadingSingularities[rep_,icut_,krep_,OptionsPattern[]]:=Module[{cut,newrep,var,isp},
+LeadingSingularities[rep_,icut_,krep_,OptionsPattern[]]:=Module[{cut,tem,newrep,var,isp,temrep,temkrep,ls},
 	(*'rep' is a basic element from the output of AllSectorBaikovMat[]. Its form is {{variables already integrated out},{glist,const}}*)
 	(*for the first step, we check whether new representation can be generated*)
 	var=rep[[2,1]]//Gram2Mat[#,krep]&//Cases[#,Subscript[x,_],Infinity]&//DeleteDuplicates;(*all Baikov variables involved*)
 	If[Not@FreeQ[icut,x],cut=icut/.{Subscript[x,a_]:>a,x[a_]:>a},cut=icut];(*the input can be either a list of Subscript[x, i] or just the numbers*)
 	isp=Complement[var,Subscript[x,#]&/@cut];(*all isps for this cut*)
-	newrep=NewReducibleRep[rep[[2,1]],isp,krep,"sector"->cut];
-	If[newrep[[1]],
+	tem=NewReducibleRep[rep[[2,1]],isp,krep,"sector"->cut];
+	If[tem[[1]],
 		Print["    New representations found in rep id: ",rep[[1]]," with cut: ",cut];
-		(*in this case, we need also consider the leading singularities of this new representation*)
+		(*in this case, we need also consider the leading singularities of these new representations*)
+		newrep=Table[{Append[rep[[1]],newrep[[i,2]]],{newrep[[i,1,1]],newrep[[i,1,2]]*rep[[2,2]]//FullSimplify},newrep[[i,3]]},{i,1,Length[newrep]}];
+		newrep=Prepend[newrep,rep],
+		newrep={{rep[[1]],rep[[2]],{}}};(*if no new representation found, then we just analysis the input representation*)
 	];
+	
+	(*in the second step, we analyse every element of newrep. Note that the krep should be replaced if new representations have been obtained*)
+	ls=Reap[
+		Do[
+			temrep=newrep[[i]][[{1,2}]];(*its form will be {{variables already integrated out},{glist,const}}*)
+			temkrep=krep/.newrep[[i,3]];(*new krep we should use*)
+			Sow[sLeadingSingularities[temrep,cut,temkrep]];
+		,{i,1,Length[newrep]}]
+	][[2,1]]//Flatten;(*collect all leading singularities*)
 ];
 
 
