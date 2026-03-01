@@ -179,10 +179,17 @@ IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 ];
 
 
-LeadingSingularities[rep_,cut_,krep_,OptionsPattern[]]:=Module[{newrep},
+LeadingSingularities[rep_,icut_,krep_,OptionsPattern[]]:=Module[{cut,newrep,var,isp},
 	(*'rep' is a basic element from the output of AllSectorBaikovMat[]. Its form is {{variables already integrated out},{glist,const}}*)
 	(*for the first step, we check whether new representation can be generated*)
-	newrep=NewReducibleRep[rep[[2,1]],{Subscript[x, 9],Subscript[x, 10],Subscript[x, 11]},krep,deBug->True,"sector"->{2,3,4,5,6,7,8}]
+	var=rep[[2,1]]//Gram2Mat[#,krep]&//Cases[#,Subscript[x,_],Infinity]&//DeleteDuplicates;(*all Baikov variables involved*)
+	If[Not@FreeQ[icut,x],cut=icut/.{Subscript[x,a_]:>a,x[a_]:>a},cut=icut];(*the input can be either a list of Subscript[x, i] or just the numbers*)
+	isp=Complement[var,Subscript[x,#]&/@cut];(*all isps for this cut*)
+	newrep=NewReducibleRep[rep[[2,1]],isp,krep,"sector"->cut];
+	If[newrep[[1]],
+		Print["    New representations found in rep id: ",rep[[1]]," with cut: ",cut];
+		(*in this case, we need also consider the leading singularities of this new representation*)
+	];
 ];
 
 

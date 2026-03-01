@@ -1000,7 +1000,7 @@ IndependentVar[mat_,isp_,OptionsPattern[]]:=Module[{len,var,coeff,row,trans,tem,
 
 Options[NewReducibleRep] = {deBug -> False, "sector"->{}};
 
-NewReducibleRep[pl_, isp_, krep_, OptionsPattern[]]:= Catch@Module[{gl,mat,xl,nisp,pos,var,temvar,trans,nkrep},
+NewReducibleRep[pl_, isp_, krep_, OptionsPattern[]]:= Catch@Module[{gl,mat,xl,nisp,pos,var,temvar,trans,nkrep,result},
 	(*this function allows the redefinition of isps in 'isp' to check whether the representation can be further reduced after redefinition.*)
 	gl=pl[[All,1]]; (*the list of grams*)
 	mat=gl//Gram2Mat[#,krep]&;
@@ -1023,17 +1023,20 @@ NewReducibleRep[pl_, isp_, krep_, OptionsPattern[]]:= Catch@Module[{gl,mat,xl,ni
 	temvar=Table[IndependentVar[mat[[i]],isp],{i,1,Length[mat]}];
 	trans=(DeleteDuplicates/@(temvar[[All,2]]//Flatten//GatherBy[#,First]&))//Tuples;(*all the different transformation rules for isps*)
 	If[OptionValue[deBug],Print["temvar: ",temvar];Print["trans: ",trans]];
-	Do[
+	result=Reap[
 		Do[
-			pos=Position[FreeQ[#,var[[j]]]&/@(temvar[[All,1]]/.trans[[i]]//Factor),False,1];
-			If[OptionValue[deBug],Print["var: ",var[[j]]];Print["pos: ",pos]];
-			If[Length[pos]==1,
-				nkrep=krep/.trans[[i]]//Factor;
-				Print["    NewReducibleRep: new-type representation found by integrating ",var[[j]]/.{Subscript[x,a_]:>x[a]}," with redefinition of isps: ",trans[[i]]/.{Subscript[x,a_]:>x[a]}];
-				Throw[{True,ReduceRep[pl, var[[j]], nkrep],trans[[i]]}]
-			];
-		,{j,1,Length[var]}];
-	,{i,1,Length[trans]}];
+			Do[
+				pos=Position[FreeQ[#,var[[j]]]&/@(temvar[[All,1]]/.trans[[i]]//Factor),False,1];
+				If[OptionValue[deBug],Print["var: ",var[[j]]];Print["pos: ",pos]];
+				If[Length[pos]==1,
+					nkrep=krep/.trans[[i]]//Factor;
+					Print["    NewReducibleRep: new-type representation found by integrating ",var[[j]]/.{Subscript[x,a_]:>x[a]}," with redefinition of isps: ",trans[[i]]/.{Subscript[x,a_]:>x[a]}];
+					Sow[{ReduceRep[pl, var[[j]], nkrep],var[[j]],trans[[i]]}]
+				];
+			,{j,1,Length[var]}];
+		,{i,1,Length[trans]}];
+	][[2]];
+	If[result=!={},Throw[{True,result[[1]]}]];(*return all possible situations that an isp can be further integrated out*)
 	Print["    NewReducibleRep: no new-type representation can be generated!"];Throw[{False,pl}];
 ];
 
