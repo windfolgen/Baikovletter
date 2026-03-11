@@ -31,6 +31,10 @@ Lambda::usage="Lambda[x,y,z] is the Kallen function x^2+y^2+z^2-2xy-2yz-2zx.";
 AllRuleQ::usage="AllRuleQ[list] returns True if all elements in the list are rules.";
 
 
+RemoveConst::usage="RemoveConst[poly] removes the overall numerical factor of a polynomial 'poly'.";
+integerPowerQ::err="The power `1` is not numerical value after taking \[Epsilon] to 0.";
+
+
 AbsGram::usage="Remove the minus sign before a Gram mat G[]";
 EquivalentGramQ::usage="EquivalentGramQ[G1,G2,krep] finds whether two Gram determinants are equal to each other.";
 
@@ -49,6 +53,9 @@ IsReducible::usage="IsReducible[gram,cut,krep] checks whether 'gram' is reducibl
 
 
 IsReducible::warning="The gram matrix `1` is 0 under the cut condition `2`.";
+
+
+SimplifyGList::usage="SimplifyGList[glist,cond,krep] simplifies the glist under cut condition 'cond', 'krep' is the replacement rule for scalar products of momenta. It is similar to SimplifyGram[] in Package Baikov but works under constraints 'cond'.";
 
 
 LeadingSingularities::usage="LeadingSingularities[rep,cut,krep] gives all the leading singularities related to a representation 'rep'. 'cut' is a set of conditions which specify propagators being cut, 'krep' is the replacement rule for scalar products. ";
@@ -89,6 +96,14 @@ Throw[True];
 
 Sector2Digits[sector_]:=Sum[Power[2,sector[[i]]-1],{i,1,Length[sector]}];
 Digits2Sector[digits_]:=Position[IntegerDigits[digits,2]//Reverse,1]//Flatten;
+
+
+(*remove constant factors of a polynomial*)
+RemoveConst[exp_]:=Times@@Drop[FactorTermsList[exp],1]//Factor;
+
+
+(*inner function, to check whether a power is integer or half integer*)
+integerPowerQ[power_]:=If[IntegerQ[power/.{\[Epsilon]->0}//Factor],Return[True],If[IntegerQ[2*power/.{\[Epsilon]->0}//Factor],Return[False],Message[integerPowerQ::err,power];Return[False]]];
 
 
 (* ::Subsection:: *)
@@ -158,7 +173,7 @@ CongruenceTrans[mat_,gram_G,OptionsPattern[]]:=Module[{trans,cong,tem,tem1},
 Options[IsReducible]={"debug"->False};
 IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 	mat=gram//Gram2Mat[#,krep]&;(*transform the gram to matrix form*)
-	cutsys=Thread@Equal[cut,0]//Gram2Mat[#,krep]&;(*solve the cut system for Baikov variables*)
+	cutsys=Thread@Equal[cut,0]//Gram2Poly[#,krep]&;(*solve the cut system for Baikov variables*)
 	cutsol=Solve[cutsys,Cases[cutsys,Subscript[x,_],Infinity]//DeleteDuplicates][[1]];
 	mat=mat/.cutsol//Factor;
 	If[OptionValue["debug"],Print["mat: ",MatrixForm[mat]]];
@@ -176,6 +191,32 @@ IsReducible[gram_G,cut_,krep_,OptionsPattern[]]:=Module[{mat,cutsys,cutsol,tem},
 		If[Head[tem[[2]]]===G,Return[{True,IsReducible[tem[[2]],cut,krep][[2]]}],Return[{True,tem[[2]]}]],
 		Return[{False,gram}]
 	];
+];
+isReducible[gram_G,cut_,krep_]:=Module[{mat,tem},
+	(*inner function for IsReducible[], the difference is that 'cut' is now directly a replacement rule so that the cut condition will not be solved many times*)
+	mat=gram//Gram2Mat[#,krep]&;(*transform the gram to matrix form*)
+	mat=mat/.cut//Factor;
+	
+	(*check whether the gram is manifestly factorizable*)
+	tem=ManifestFactorized[mat,gram];
+	If[tem===0,Message[IsReducible::warning,gram,cut]];
+	If[tem=!=gram,Return[{True,tem}]];
+	
+	(*if it is not manifestly factorized, it can still possibly be factorzied after congruence transformation*)
+	tem=CongruenceTrans[mat,gram];
+	If[tem[[2]]=!=gram,
+		(*try to reduce it recursively so that its simplest form achieved*)
+		If[Head[tem[[2]]]===G,Return[{True,isReducible[tem[[2]],cut,krep][[2]]}],Return[{True,tem[[2]]}]],
+		Return[{False,gram}]
+	];
+];
+
+
+SimplifyGList[glist_,cond_,krep_]:=Module[{cutsys,cutsol},
+	cutsys=Thread@Equal[cond,0]//Gram2Poly[#,krep]&;(*solve the cut system for Baikov variables*)
+	cutsol=Solve[cutsys,Cases[cutsys,Subscript[x,_],Infinity]//DeleteDuplicates][[1]];(*solution of cut condition*)
+	
+	
 ];
 
 
@@ -198,10 +239,33 @@ LeadingSingularities[rep_,icut_,krep_,OptionsPattern[]]:=Module[{cut,tem,newrep,
 	ls=Reap[
 		Do[
 			temrep=newrep[[i]][[{1,2}]];(*its form will be {{variables already integrated out},{glist,const}}*)
-			temkrep=krep/.newrep[[i,3]];(*new krep we should use*)
+			temkrep=krep/.newrep[[i,3]]//Factor;(*new krep we should use*)
 			Sow[sLeadingSingularities[temrep,cut,temkrep]];
 		,{i,1,Length[newrep]}]
 	][[2,1]]//Flatten;(*collect all leading singularities*)
+];
+sLeadingSingularities[rep_,cut_,krep_]:=Module[{cond,gl,glmat,tem,ls={},squarerootG,integerG},
+	cond=Subscript[x,#]&/@cut;(*initial conditions*)
+	(*the basic data structure is 
+		{"exp"->(*explicit expression of ls*),
+		 "Gram"->(*corresponding gram of ls, {True,G} if it directly corresponds to a gram, {False,G} if it is solved from a gram*),
+		 "root"->(*whether it is under a square root*),
+		 "rep"->(*the representation that generates it*),
+		 "prop"->(*the propagators cut for this ls, that is, which sector it is from*),
+		 "adcut"->(*additional cut conditions (for isps) to obtain this ls*),
+		 "lastvar"->(*last variable solved to get this ls*),
+		 "lasteq"->(*last equation solved to get this ls*)}*)
+	(*in the first step, we split the singularities into pure kinematic part and dynamic part*)
+	gl=rep[[2,1]];
+	glmat=({#[[1]],Gram2Mat[#[[1]],krep],#[[2]]}&/@gl);
+	
+	tem=Select[glmat,FreeQ[#,x]&];(*select all grams that are free of Baikov variables*)
+	If[tem=!={},ls=Table[Association[{"exp"->(Det[tem[[i,2]]]//RemoveConst),"Gram"->{True,tem[[i,1]]},"root"->(Not@integerPowerQ[tem[[i,3]]]),"rep"->rep[[1]],"prop"->{},"adcut"->{},"lastvar"->{},"lasteq"->{}}],{i,1,Length[tem]}]];(*kinematic leading singularities*)
+	
+	tem=Select[glmat,Not@FreeQ[#,x]&];(*select all grams that involve Baikov variables*)
+	integerG=Select[tem,integerPowerQ[#[[3]]]&][[All,{1,2}]];(*list with integer powers, only keep their abstract form*)
+	squarerootG=Select[tem,Not@integerPowerQ[#[[3]]]&][[All,{1,2}]];(*list with half-integer powers, only keep their abstract form*)
+	
 ];
 
 
